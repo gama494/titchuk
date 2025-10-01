@@ -10,7 +10,8 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-  getDoc
+  getDoc,
+  deleteDoc
 } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import {
   getAuth,
@@ -36,6 +37,7 @@ const auth = getAuth(app);
 // ✅ Auth state check
 let currentUserId = null;
 let totalBalance = 0;
+let userMusicData = []; // Cache for song data to use in edit modal
 
 const PREDEFINED_GENRES = ['Gospel', 'Hip Hop', 'Afrobeat', 'R&B', 'Pop', 'Reggae', 'Traditional', 'Amapiano', 'Dancehall', 'Trap'];
 
@@ -47,6 +49,7 @@ onAuthStateChanged(auth, async (user) => {
     await loadMusic();
     setupAlbumFormListeners();
     setupModalListeners();
+    setupMusicEventListeners(); // Setup listeners for edit/delete
   } else {
     window.location.href = '../signin.html';
   }
@@ -140,7 +143,7 @@ async function loadUserAlbums() {
     });
 }
 
-// ---- MODAL FUNCTIONS ----
+// ---- ALBUM MODAL FUNCTIONS ----
 function setupModalListeners() {
     const modal = document.getElementById('edit-album-modal');
     const closeBtn = document.getElementById('close-modal-btn');
@@ -317,6 +320,7 @@ async function loadMusic() {
   container.innerHTML = '';
 
   totalBalance = 0;
+  userMusicData = []; // Clear and repopulate the cache
 
   const q = query(collection(db, 'music'), where('userId', '==', currentUserId));
   const snapshot = await getDocs(q);
@@ -327,6 +331,8 @@ async function loadMusic() {
 
   snapshot.forEach((doc) => {
     const song = doc.data();
+    userMusicData.push({ id: doc.id, ...song }); // Add song to cache
+    
     const { title, artist, posterUrl, audioUrl, albumTitle, likes = [], downloads = [], views = [] } = song;
 
     const likesMK = likes.length * 5;
@@ -339,7 +345,13 @@ async function loadMusic() {
     const card = document.createElement('div');
     card.className = 'dashboard-music-card';
     card.innerHTML = `
-      <img src="${posterUrl}" alt="${title}" class="card-poster">
+      <div class="dashboard-poster-container">
+          <img src="${posterUrl}" alt="${title}" class="card-poster">
+          <div class="dashboard-card-overlay-actions">
+              <button class="edit-music-btn" data-id="${doc.id}" title="Edit Song"><i class='bx bxs-edit'></i></button>
+              <button class="delete-music-btn" data-id="${doc.id}" title="Delete Song"><i class='bx bxs-trash'></i></button>
+          </div>
+      </div>
       <div class="card-content">
           <h4 class="card-title">${title}</h4>
           <p class="card-artist">${artist}</p>
@@ -351,17 +363,9 @@ async function loadMusic() {
       <div class="card-actions">
           <a href="${audioUrl}" download="${artist} - ${title}.mp3" title="Download"><i class='bx bxs-download'></i></a>
           <a href="music-details.html?id=${doc.id}" target="_blank" title="View Details"><i class='bx bx-show'></i></a>
-          <button class="copy-link-btn" title="Copy Link"><i class='bx bx-link'></i></button>
+          <button class="copy-link-btn" data-id="${doc.id}" title="Copy Link"><i class='bx bx-link'></i></button>
       </div>
     `;
-
-    card.querySelector('.copy-link-btn').addEventListener('click', (e) => {
-      e.preventDefault();
-      const detailPageUrl = `${window.location.origin}/music-details.html?id=${doc.id}`;
-      navigator.clipboard.writeText(detailPageUrl);
-      alert('Link to details page copied!');
-    });
-
     container.appendChild(card);
   });
 
@@ -376,6 +380,111 @@ async function loadMusic() {
     withdrawBtn.disabled = true;
   }
 }
+
+// ---- MUSIC MODAL AND ACTIONS ----
+function setupMusicEventListeners() {
+    const container = document.getElementById('music-list-container');
+    const modal = document.getElementById('edit-music-modal');
+    const form = document.getElementById('edit-music-form');
+    const closeBtn = document.getElementById('close-edit-modal-btn');
+
+    // Event delegation for edit, delete, and copy buttons
+    container.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-music-btn');
+        const deleteBtn = e.target.closest('.delete-music-btn');
+        const copyBtn = e.target.closest('.copy-link-btn');
+
+        if (editBtn) {
+            const songId = editBtn.dataset.id;
+            openEditMusicModal(songId);
+        }
+
+        if (deleteBtn) {
+            const songId = deleteBtn.dataset.id;
+            if (confirm('Are you sure you want to permanently delete this song? This action cannot be undone.')) {
+                try {
+                    await deleteDoc(doc(db, 'music', songId));
+                    alert('Song deleted successfully.');
+                    loadMusic(); // Refresh the list
+                } catch (error) {
+                    console.error("Error deleting song:", error);
+                    alert('Failed to delete song. Please try again.');
+                }
+            }
+        }
+
+        if (copyBtn) {
+            const songId = copyBtn.dataset.id;
+            const detailPageUrl = `${window.location.origin}/music-details.html?id=${songId}`;
+            navigator.clipboard.writeText(detailPageUrl);
+            alert('Link to details page copied!');
+        }
+    });
+
+    // Modal listeners
+    closeBtn.addEventListener('click', closeEditMusicModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeEditMusicModal();
+        }
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const songId = document.getElementById('edit-song-id').value;
+        const newTitle = document.getElementById('edit-title').value;
+        const newArtist = document.getElementById('edit-artist').value;
+        const posterFile = document.getElementById('edit-poster').files[0];
+
+        const saveBtn = document.getElementById('save-music-changes-btn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        try {
+            const updateData = {
+                title: newTitle,
+                artist: newArtist,
+            };
+
+            if (posterFile) {
+                const newPosterUrl = await uploadToCloudinary(posterFile, 'music-posters');
+                updateData.posterUrl = newPosterUrl;
+            }
+
+            const songRef = doc(db, 'music', songId);
+            await updateDoc(songRef, updateData);
+            
+            alert('Song updated successfully!');
+            closeEditMusicModal();
+            await loadMusic(); // Refresh list
+
+        } catch (error) {
+            alert('Error updating song: ' + error.message);
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Changes';
+        }
+    });
+}
+
+function openEditMusicModal(songId) {
+    const song = userMusicData.find(s => s.id === songId);
+    if (!song) {
+        alert('Could not find song data. Please refresh.');
+        return;
+    }
+
+    document.getElementById('edit-song-id').value = song.id;
+    document.getElementById('edit-title').value = song.title;
+    document.getElementById('edit-artist').value = song.artist;
+    document.getElementById('edit-poster').value = ''; // Clear file input
+    document.getElementById('edit-music-modal').style.display = 'flex';
+}
+
+function closeEditMusicModal() {
+    document.getElementById('edit-music-modal').style.display = 'none';
+}
+
 
 // ✅ Withdraw button event
 document.getElementById('header-withdraw-btn').addEventListener('click', () => {

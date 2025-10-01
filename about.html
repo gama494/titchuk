@@ -1,0 +1,104 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Titchuke Music</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.jpg" type="image/png" />
+</head>
+<body>
+    <div class="container">
+        <!-- Reusing sidebar for consistency -->
+        <aside class="sidebar">
+            <div>
+                <div class="logo">
+                  <button class="menu-btn" id="menu-close">
+                    <i class='bx bx-log-out-circle'></i>
+                  </button>
+                  <i class='bx bx-pulse'></i>
+                  <a href="index-1.html">Titchuke</a>
+                </div>
+        
+                <div class="menu">
+                  <h5>Menu</h5>
+                  <ul>
+                    <li><i class='bx bxs-home'></i><a href="index-1.html">Home</a></li>
+                    <li><i class='bx bxs-bolt-circle'></i><a href="exprole.html">Explore</a></li>
+                    <li><i class='bx bxs-volume-full'></i><a href="genres.html">Genres</a></li>
+                    <li><i class='bx bxs-album'></i><a href="albums.html">Albums</a></li>
+                    <li><i class='bx bxs-microphone'></i><a href="artist.html">Artists</a></li>
+                    <li><i class='bx bxs-radio'></i><a href="broadcast.html">Broadcasts</a></li>
+                    <li><i class='bx bxs-download'></i><a href="downloader.html">Download from Link</a></li>
+                    <li class="active"><i class='bx bxs-info-circle'></i><a href="about.html">About Us</a></li>
+                  </ul>
+                </div>
+            </div>
+        </aside>
+
+        <main>
+            <header class="page-header">
+                 <button class="menu-btn" id="menu-open">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <h1>About Titchuke Music</h1>
+            </header>
+
+            <div class="about-container">
+                <div class="about-content">
+                    <div class="about-image">
+                        <img src="https://picsum.photos/seed/titchuke/800/500" alt="About Titchuke Music">
+                    </div>
+                    <div class="about-text">
+                        <h2>Our Mission</h2>
+                        <p>Welcome to Titchuke Music, the heart of Malawian sounds and beyond. Our mission is to provide a vibrant platform where artists can share their passion and listeners can discover the rich tapestry of music our culture has to offer. We believe in empowering creators and connecting them with a global audience.</p>
+                        
+                        <h2>Our Story</h2>
+                        <p>Founded in 2024, Titchuke Music started as a small project to showcase local talent. We saw incredible artists with powerful stories to tell, but limited avenues to reach the world. Titchuke was born from a desire to change that. We've grown into a community-driven space that celebrates diversity, creativity, and the universal language of music.</p>
+
+                        <h2>What We Offer</h2>
+                        <p>For artists, we provide a dashboard to upload music, manage albums, and track earnings through a transparent system based on likes, views, and downloads. For listeners, we offer a seamless experience to explore genres, discover new hits, listen to radio broadcasts, and connect with their favorite artists. Join us on this journey and be part of the rhythm of Titchuke Music.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="shared-player-container"></div>
+    <script type="module" src="shared-player.js"></script>
+
+    <script>
+        // Script for mobile sidebar toggle
+        document.addEventListener('DOMContentLoaded', () => {
+          const menuOpen = document.getElementById("menu-open");
+          const menuClose = document.getElementById("menu-close");
+          const sidebar = document.querySelector(".sidebar");
+          const main = document.querySelector("main");
+    
+          if (menuOpen && sidebar) {
+            menuOpen.addEventListener("click", (e) => {
+              e.stopPropagation();
+              sidebar.classList.add("open");
+            });
+          }
+    
+          if (menuClose && sidebar) {
+            menuClose.addEventListener("click", () => {
+              sidebar.classList.remove("open");
+            });
+          }
+          
+          if (main && sidebar) {
+              document.body.addEventListener('click', (e) => {
+                  if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !menuOpen.contains(e.target)) {
+                      sidebar.classList.remove('open');
+                  }
+              });
+          }
+        });
+    </script>
+</body>
+</html>

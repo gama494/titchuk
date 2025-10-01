@@ -1,6 +1,8 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-import { getFirestore, collection, getDocs, query, where, documentId } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+import { getFirestore, collection, getDocs, query, where, documentId, doc, updateDoc, arrayUnion } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+
 
 const firebaseConfig = {
     apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
@@ -13,6 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 // --- STATE MANAGEMENT ---
 let audio = new Audio();
@@ -22,10 +25,51 @@ let currentIndex = -1;
 let isPlaying = false;
 let isShuffling = false;
 let repeatMode = 'none'; // 'none', 'one', 'all'
+let currentVisitorId = null;
+
+// --- AUTH STATE ---
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentVisitorId = user.uid;
+  } else {
+    if (!localStorage.getItem('guestId')) {
+      const randomId = 'guest_' + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('guestId', randomId);
+    }
+    currentVisitorId = localStorage.getItem('guestId');
+  }
+});
+
 
 // --- DOM ELEMENTS ---
 const backgroundEl = document.getElementById('player-background');
 const contentWrapper = document.getElementById('player-content-wrapper');
+
+async function recordView(songId) {
+    // wait a moment for currentVisitorId to be set by onAuthStateChanged
+    if (!currentVisitorId) {
+        setTimeout(() => recordView(songId), 500);
+        return;
+    }
+
+    const viewedSongs = JSON.parse(sessionStorage.getItem('viewedSongs') || '[]');
+    if (viewedSongs.includes(songId)) {
+        return; // Already viewed in this session
+    }
+
+    try {
+        const musicDocRef = doc(db, 'music', songId);
+        await updateDoc(musicDocRef, {
+            views: arrayUnion(currentVisitorId)
+        });
+        
+        viewedSongs.push(songId);
+        sessionStorage.setItem('viewedSongs', JSON.stringify(viewedSongs));
+        console.log(`View recorded for song ${songId}`);
+    } catch (error) {
+        console.error("Error recording view:", error);
+    }
+}
 
 function formatTime(seconds) {
     if (isNaN(seconds)) return '0:00';
@@ -157,6 +201,7 @@ function loadSong(index) {
     updateUIForCurrentSong();
     
     const song = playlist[currentIndex];
+    recordView(song.id); // Record view when a new song is loaded
     audio.src = song.audioUrl;
     audio.load();
     if (isPlaying) {
@@ -299,4 +344,3 @@ async function initializePlayer() {
 }
 
 document.addEventListener('DOMContentLoaded', initializePlayer);
-    
