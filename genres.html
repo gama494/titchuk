@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Genres - Titchuke Music</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="page-header">
+    <a href="index.html" class="back-link"><i class="bx bx-arrow-back"></i> Back to Home</a>
+    <h1>Genres</h1>
+  </header>
+
+  <main class="page-content">
+    <div id="genres" class="genres-list"></div>
+    <h2 id="songs-title" style="display:none;"></h2>
+    <div id="songs" class="song-list-container"></div>
+  </main>
+  
+  <footer class="footer">
+    <div class="footer-content">
+      <p><i class='bx bxs-map'></i> Located in <strong>Lilongwe, Area 18B – Sent Market</strong></p>
+
+    <div class="social-icons">
+      <p>&copy; 2025 <strong>TITCHUKE MUSIC</strong>. All rights reserved.</p>
+      <p>Contact Us these through platforms</p>
+      <div class="social-icons">
+        <a href="https://web.facebook.com/profile.php?id=61561331881499" target="_blank"><i class='bx bxl-facebook-circle'></i></a>
+        <a href="https://wa.me/0981467345" target="_blank"><i class='bx bxl-whatsapp'></i></a>
+        <a href="https://youtube.com" target="_blank"><i class='bx bxl-youtube'></i></a>
+        <a href="https://instagram.com" target="_blank"><i class='bx bxl-instagram'></i></a>
+      </div>
+      <p>Designed by <strong>Kris Tech</strong></p>
+    </div>
+  </footer>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+      authDomain: "music-upload-30cc3.firebaseapp.com",
+      projectId: "music-upload-30cc3",
+      storageBucket: "music-upload-30cc3.firebasestorage.app",
+      messagingSenderId: "385597338493",
+      appId: "1:385597338493:web:04696d4dc201e8427e1214"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const genresDiv = document.getElementById('genres');
+    const songsDiv = document.getElementById('songs');
+    const songsTitle = document.getElementById('songs-title');
+
+    async function loadGenres() {
+      const snapshot = await getDocs(collection(db, 'music'));
+      if (snapshot.empty) {
+        genresDiv.textContent = "No genres found.";
+        return;
+      }
+
+      const genresSet = new Set();
+      const songs = [];
+
+      snapshot.forEach(docSnap => {
+        const song = docSnap.data();
+        song.id = docSnap.id;
+        songs.push(song);
+
+        if (song.genres && Array.isArray(song.genres)) {
+          song.genres.forEach(g => genresSet.add(g.toLowerCase()));
+        }
+      });
+
+      if (genresSet.size === 0) {
+        genresDiv.textContent = "No genres found.";
+        return;
+      }
+
+      genresDiv.innerHTML = '';
+      [...genresSet].sort().forEach(genre => {
+        const div = document.createElement('div');
+        div.className = 'genre-item';
+        div.textContent = genre.charAt(0).toUpperCase() + genre.slice(1);
+        div.addEventListener('click', () => {
+          showSongsByGenre(genre, songs);
+        });
+        genresDiv.appendChild(div);
+      });
+    }
+
+    function showSongsByGenre(genre, songs) {
+      songsTitle.style.display = 'block';
+      songsTitle.textContent = `Songs in genre: ${genre.charAt(0).toUpperCase() + genre.slice(1)}`;
+
+      const filteredSongs = songs.filter(song => {
+        if (!song.genres || !Array.isArray(song.genres)) return false;
+        return song.genres.map(g => g.toLowerCase()).includes(genre);
+      });
+      
+      const songIdsForPlaylist = filteredSongs.map(s => s.id);
+
+      if (filteredSongs.length === 0) {
+        songsDiv.innerHTML = `<p>No songs found in this genre.</p>`;
+        return;
+      }
+
+      songsDiv.innerHTML = '';
+      filteredSongs.forEach(song => {
+        const songCard = document.createElement('div');
+        songCard.className = 'artist-song-card';
+
+        songCard.innerHTML = `
+          <img src="${song.posterUrl}" alt="${song.title}" class="song-poster" />
+          <div class="details">
+            <h3>${song.title}</h3>
+            <p>By ${song.artist}</p>
+          </div>
+          <button class="play-btn-sm" title="Play ${song.title}"><i class='bx bx-play'></i></button>
+        `;
+
+        songCard.addEventListener('click', () => {
+            sessionStorage.setItem('currentPlaylist', JSON.stringify(songIdsForPlaylist));
+            window.location.href = `player.html?id=${song.id}`;
+        });
+
+        songsDiv.appendChild(songCard);
+      });
+    }
+
+    loadGenres();
+  </script>
+
+</body>
+</html>
+    

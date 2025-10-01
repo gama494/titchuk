@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Downloads</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header style="padding: 15px; background: #1e1e1e; color: white;">
+    <a href="index.html" style="color: #ff4d4d; text-decoration: none;">
+      <i class='bx bx-home'></i> Back to Home
+    </a>
+    <h2>My Downloaded Songs</h2>
+  </header>
+
+  <div class="music-list items" style="padding: 20px;"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      orderBy
+    } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import {
+      getAuth,
+      onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+
+    // Firebase config (update if needed)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+      authDomain: "music-upload-30cc3.firebaseapp.com",
+      projectId: "music-upload-30cc3",
+      storageBucket: "music-upload-30cc3.firebasestorage.app",
+      messagingSenderId: "385597338493",
+      appId: "1:385597338493:web:04696d4dc201e8427e1214"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const container = document.querySelector(".music-list.items");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        container.innerHTML = "<p>Please <a href='signin.html'>log in</a> to see your downloads.</p>";
+        return;
+      }
+
+      const userId = user.uid;
+      const musicRef = query(collection(db, 'music'), orderBy('timestamp', 'desc'));
+      const snapshot = await getDocs(musicRef);
+
+      const downloadedSongs = [];
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const downloads = data.downloads || [];
+        if (downloads.includes(userId)) {
+          downloadedSongs.push({ id: doc.id, ...data });
+        }
+      });
+
+      if (downloadedSongs.length === 0) {
+        container.innerHTML = "<p>You haven't downloaded any songs yet.</p>";
+        return;
+      }
+      
+      const songIdsForPlaylist = downloadedSongs.map(s => s.id);
+
+      container.innerHTML = '';
+      downloadedSongs.forEach(song => {
+        const { id, title, artist, posterUrl, audioUrl, views = [], likes = [], downloads = [] } = song;
+
+        const card = document.createElement("div");
+        card.className = "artist-song-card";
+        card.innerHTML = `
+          <img src="${posterUrl}" class="poster" alt="${title}">
+          <div class="details">
+            <h3>${title}</h3>
+            <p>By ${artist}</p>
+             <div class="actions" style="border-top: none; padding-top: 5px; justify-content: flex-start; gap: 15px;">
+              <span><i class='bx bx-like'></i> ${likes.length}</span>
+              <span><i class='bx bx-show'></i> ${views.length}</span>
+              <span><i class='bx bxs-download'></i> ${downloads.length}</span>
+            </div>
+          </div>
+          <button class="play-btn-sm" title="Play ${title}"><i class='bx bx-play'></i></button>
+        `;
+         card.addEventListener('click', (e) => {
+            if (e.target.closest('.actions')) return;
+            sessionStorage.setItem('currentPlaylist', JSON.stringify(songIdsForPlaylist));
+            window.location.href = `player.html?id=${id}`;
+        });
+        container.appendChild(card);
+      });
+    });
+  </script>
+
+</body>
+</html>
+    

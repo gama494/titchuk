@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Downloading...</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme download-page-body">
+
+  <div class="download-card">
+    <img id="poster" src="" alt="Music Poster">
+    <h2 id="title">Downloading...</h2>
+    <a id="downloadLink" class="download-link" href="#" download>Download Now</a>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const title = params.get("title");
+    const artist = params.get("artist");
+    const poster = params.get("poster");
+    const audio = params.get("audio");
+
+    if (title && poster && audio) {
+      document.getElementById("title").textContent = `Now Downloading: ${title}`;
+      document.getElementById("poster").src = decodeURIComponent(poster);
+
+      const link = document.getElementById("downloadLink");
+      link.href = decodeURIComponent(audio);
+      
+      const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}.mp3` : `${decodeURIComponent(title)}.mp3`;
+      link.setAttribute("download", filename);
+
+      // Optional: Auto start download after delay
+      setTimeout(() => {
+        link.click();
+      }, 1000);
+    } else {
+      document.body.innerHTML = "<p>Invalid download link</p>";
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>TITCHUKE | Dashboard</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+
+<div class="dashboard-wrapper">
+
+  <!-- Header -->
+  <header class="dashboard-header">
+    <h1><i class='bx bx-music'></i> TITCHUKE Dashboard</h1>
+    <div class="header-right">
+      <div class="balance-display" title="Your Total Earnings">
+        <i class='bx bxs-wallet'></i>
+        <span id="balance-amount">MK 0</span>
+      </div>
+      <button id="header-withdraw-btn" disabled>Withdraw</button>
+      <button id="logout-button" title="Logout"><i class='bx bx-log-out-circle'></i></button>
+    </div>
+  </header>
+
+  <!-- Upload Form -->
+  <section class="dashboard-card upload-section">
+    <h2><i class='bx bx-upload'></i> Upload Your Music</h2>
+    <form id="music-upload-form">
+      <div class="form-group">
+        <label for="title">Title</label>
+        <input type="text" id="title" placeholder="Enter song title" required>
+      </div>
+
+      <div class="form-group">
+        <label for="artist">Artist</label>
+        <input type="text" id="artist" placeholder="Artist name" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="genres">Genres</label>
+        <div id="genre-container" class="genre-checkbox-container">
+          <!-- Genres will be populated by JS -->
+        </div>
+      </div>
+      
+      <div class="album-toggle">
+        <label><input type="checkbox" id="add-to-album-toggle"> Add to an album</label>
+      </div>
+      
+      <!-- NEW AWESOME ALBUM SECTION -->
+      <div id="album-options" style="display:none;">
+          <div class="album-choice-tabs">
+              <button class="album-tab-btn active" data-tab="new-album-section">Create New</button>
+              <button class="album-tab-btn" data-tab="existing-album-section">Select Existing</button>
+          </div>
+          
+          <div id="new-album-section" class="album-tab-content active">
+              <label for="album-title">New Album Title</label>
+              <input type="text" id="album-title" placeholder="e.g., Summer Vibes">
+          </div>
+
+          <div id="existing-album-section" class="album-tab-content">
+              <label>Your Albums</label>
+              <div id="existing-albums-list" class="existing-albums-grid">
+                  <!-- Existing albums will be loaded here by JS -->
+              </div>
+          </div>
+          <input type="hidden" id="selected-album-id">
+      </div>
+
+      <div class="form-group">
+        <label for="poster">Poster Image</label>
+        <input type="file" id="poster" accept="image/*" required>
+      </div>
+
+      <div class="form-group">
+        <label for="audio">Audio File</label>
+        <input type="file" id="audio" accept="audio/*" required>
+      </div>
+
+      <button type="submit"><i class='bx bx-cloud-upload'></i> Upload</button>
+    </form>
+  </section>
+
+  <!-- Uploaded Music List -->
+  <section class="dashboard-card uploaded-music">
+    <h2><i class='bx bx-library'></i> Your Uploaded Songs</h2>
+    <div id="music-list-container"></div>
+  </section>
+
+</div>
+<!-- ✅ Success Toast Message -->
+<div id="success-toast" class="toast success">
+  ✅ Upload successfully completed!
+</div>
+<div id="withdraw-warning" class="toast warning">
+  <div>
+    You need to reach <strong>MK 50,000</strong> to withdraw.<br>
+    <a href="rules.html">Learn more</a>
+  </div>
+</div>
+
+<!-- EDIT ALBUM MODAL -->
+<div id="edit-album-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <button id="close-modal-btn" class="modal-close-btn">&times;</button>
+        <h2>Edit Album</h2>
+        <form id="edit-album-form">
+            <input type="hidden" id="edit-album-id">
+            <div class="form-group">
+                <label for="album-title-edit">Album Title</label>
+                <input type="text" id="album-title-edit" required>
+            </div>
+            <div class="form-group">
+                <label for="album-artist-edit">Album Artist</label>
+                <input type="text" id="album-artist-edit" required>
+            </div>
+            <div class="form-group">
+                <label for="album-poster-edit">New Poster (Optional)</label>
+                <input type="file" id="album-poster-edit" accept="image/*">
+            </div>
+            <button type="submit" id="save-album-changes-btn">Save Changes</button>
+        </form>
+    </div>
+</div>
+
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Malawi Radio Broadcast - 4K Radio Player</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="broadcast-body">
+
+<div class="broadcast-container">
+  <div class="station-list" aria-label="List of radio stations">
+    <h2>Stations</h2>
+    <!-- Stations injected by JS -->
+  </div>
+
+  <div class="player">
+    <img src="logo.jpg" alt="Station Logo" id="station-logo" />
+    <h1 id="station-title">Select a station</h1>
+
+    <div class="controls">
+      <button class="btn" id="play-pause" aria-label="Play/Pause">
+        <i class='bx bx-play'></i>
+      </button>
+
+      <div class="volume-container">
+        <i class='bx bx-volume-full' aria-hidden="true"></i>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="1" aria-label="Volume control" />
+      </div>
+    </div>
+
+    <audio id="audio" preload="auto"></audio>
+  </div>
+</div>
+
+<script>
+  // Stations data
+  const stations = [
+    {
+      name: "Timveni Radio",
+      stream: "https://play.streamafrica.net/timveni",
+      logo: "https://static2.mytuner.mobi/media/tvos_radios/b3f7kdxwudw4.png"
+    },
+    {
+      name: "Zodiak Broadcasting Station",
+      stream: "	https://ice31.securenetsystems.net/0079",
+      logo: "	OIP.webp"
+    },
+    {
+      name: "Luso liawale",
+      stream: "http://stream.zeno.fm/b2zgf5fd6ehvv",
+      logo: " luso.webp"
+    }
+  ];
+
+  // DOM Elements
+  const stationListEl = document.querySelector(".station-list");
+  const stationTitleEl = document.getElementById("station-title");
+  const stationLogoEl = document.getElementById("station-logo");
+  const playPauseBtn = document.getElementById("play-pause");
+  const volumeSlider = document.getElementById("volume");
+  const audioEl = document.getElementById("audio");
+
+  let currentStationIndex = null;
+  let isPlaying = false;
+
+  // Populate station list UI
+  function renderStationList() {
+    stations.forEach((station, index) => {
+      const stationDiv = document.createElement("div");
+      stationDiv.classList.add("station");
+      stationDiv.setAttribute("role", "button");
+      stationDiv.setAttribute("tabindex", "0");
+      stationDiv.setAttribute("aria-label", `Select ${station.name}`);
+      stationDiv.dataset.index = index;
+
+      stationDiv.innerHTML = `
+        <img src="${station.logo}" alt="${station.name} Logo" />
+        <div class="station-info">${station.name}</div>
+      `;
+
+      // Click or keyboard select station
+      stationDiv.addEventListener("click", () => selectStation(index));
+      stationDiv.addEventListener("keypress", e => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectStation(index);
+        }
+      });
+
+      stationListEl.appendChild(stationDiv);
+    });
+  }
+
+  // Update UI and play chosen station
+  function selectStation(index) {
+    if (currentStationIndex === index) {
+      // toggle play/pause if clicking same station
+      togglePlayPause();
+      return;
+    }
+
+    currentStationIndex = index;
+    const station = stations[index];
+
+    // Update player UI
+    stationTitleEl.textContent = station.name;
+    stationLogoEl.src = station.logo;
+    stationLogoEl.alt = `${station.name} Logo`;
+
+    // Highlight active station in list
+    document.querySelectorAll(".station").forEach((el, idx) => {
+      el.classList.toggle("active", idx === index);
+    });
+
+    // Load and play stream
+    audioEl.src = station.stream;
+    audioEl.play().catch(() => {
+      // Autoplay might be blocked, wait for user interaction
+    });
+
+    isPlaying = true;
+    updatePlayPauseIcon();
+    stationLogoEl.classList.add("playing");
+  }
+
+  function togglePlayPause() {
+    if (!audioEl.src) return; // no station selected
+    if (audioEl.paused) {
+      audioEl.play();
+      isPlaying = true;
+      stationLogoEl.classList.add("playing");
+    } else {
+      audioEl.pause();
+      isPlaying = false;
+      stationLogoEl.classList.remove("playing");
+    }
+    updatePlayPauseIcon();
+  }
+
+  function updatePlayPauseIcon() {
+    playPauseBtn.innerHTML = isPlaying ? "<i class='bx bx-pause'></i>" : "<i class='bx bx-play'></i>";
+  }
+
+  // Volume control
+  volumeSlider.addEventListener("input", e => {
+    audioEl.volume = e.target.value;
+  });
+
+  // Play/pause button
+  playPauseBtn.addEventListener("click", togglePlayPause);
+
+  // Initialize volume to max
+  audioEl.volume = volumeSlider.value;
+
+  // Render stations on page load
+  renderStationList();
+</script>
+
+</body>
+</html>

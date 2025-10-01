@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - Titchuke Music</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.jpg" type="image/png" />
+</head>
+<body>
+    <div class="back-link-container">
+        <a href="index.html" class="back-link"><i class='bx bx-arrow-back'></i> Back to Home</a>
+    </div>
+    <div class="docs-container">
+        <header class="docs-header">
+            <h1>API Documentation</h1>
+            <p>Welcome to the Titchuke Music developer documentation. Use our URL-based API to interact with public music data.</p>
+        </header>
+
+        <section class="docs-section">
+            <h2><i class='bx bx-key'></i> Authentication</h2>
+            <p>Our public API endpoints are currently open for use and <strong>do not require an API key</strong>. You can directly access the endpoints without any authentication headers or keys.</p>
+            <p>This allows for easy integration for public-facing data, such as embedding song details on your own website or creating shareable links.</p>
+        </section>
+
+        <section class="docs-section">
+            <h2><i class='bx bx-transfer-alt'></i> Endpoints</h2>
+            <p>Our API is based on simple GET requests using URL parameters to specify the desired resource.</p>
+            
+            <h3>Display Music Details Page</h3>
+            <p>This endpoint renders a full HTML page for a specific song, including its poster, title, artist, stats, and an audio player.</p>
+            
+            <h4><strong>Request</strong></h4>
+            <pre><code>GET /music-details.html?id={songId}</code></pre>
+            
+            <h4><strong>Parameters</strong></h4>
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>String</td>
+                        <td><strong>Required.</strong> The unique identifier for the song, which can be found in the song link.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4><strong>Example</strong></h4>
+            <p>To get the details page for a song with the ID <code>someSongId123</code>, you would use the following URL:</p>
+            <pre><code>https://[your-domain.com]/music-details.html?id=someSongId123</code></pre>
+            
+            <h4><strong>Response</strong></h4>
+            <p>The server will respond with an HTML document (<code>Content-Type: text/html</code>) that renders the song's detail page in the browser.</p>
+        </section>
+        
+        <section class="docs-section">
+            <h2><i class='bx bx-question-mark'></i> Future Development</h2>
+            <p>We are continuously working to improve our platform. In the future, we may introduce a more comprehensive JSON-based REST API for advanced integrations. Stay tuned for updates!</p>
+        </section>
+
+    </div>
+</body>
+</html>

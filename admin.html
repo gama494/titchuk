@@ -1,0 +1,131 @@
+<!-- ADMIN DASHBOARD - admin-dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel | Titchuke</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme">
+  <div class="admin-container">
+    <div id="admin-info">
+        <h1>Welcome back, <span id="admin-email">Admin</span></h1>
+        <p>Here you can manage all registered users on the Titchuke platform.</p>
+        <a href="dashboard.html" style="font-weight: bold;">Go to Music Upload Dashboard &rarr;</a>
+    </div>
+    
+    <h2>Registered Users</h2>
+
+    <div class="admin-table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Gender</th>
+            <th>Age</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import {
+      getFirestore, collection, getDocs, doc, updateDoc, deleteDoc
+    } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import {
+      getAuth, onAuthStateChanged, sendPasswordResetEmail
+    } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+      authDomain: "music-upload-30cc3.firebaseapp.com",
+      projectId: "music-upload-30cc3",
+      storageBucket: "music-upload-30cc3.firebasestorage.app",
+      messagingSenderId: "385597338493",
+      appId: "1:385597338493:web:04696d4dc201e8427e1214"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+        if (user && user.email === 'innocentbenard079@gmail.com') {
+            document.getElementById('admin-email').textContent = user.email;
+            loadUsers();
+        } else {
+            alert('Access denied. Redirecting to login.');
+            window.location.href = 'adminlogin.html';
+        }
+    });
+
+    async function loadUsers() {
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const tbody = document.getElementById('users-table-body');
+      tbody.innerHTML = '';
+
+      usersSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${data.username || 'N/A'}</td>
+          <td>${data.email}</td>
+          <td>${data.gender || 'N/A'}</td>
+          <td>${data.age || 'N/A'}</td>
+          <td>${data.phone || 'N/A'}</td>
+          <td>${data.disabled ? '<span class="status-disabled">Disabled</span>' : '<span class="status-active">Active</span>'}</td>
+          <td>
+            <button class="btn-admin delete" data-id="${docSnap.id}">Delete</button>
+            <button class="btn-admin disable" data-id="${docSnap.id}">Disable</button>
+            <button class="btn-admin enable" data-id="${docSnap.id}">Enable</button>
+            <button class="btn-admin reset" data-email="${data.email}">Reset Password</button>
+          </td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+      
+      // Add event listeners after rows are created
+      tbody.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', handleAction);
+      });
+    }
+
+    async function handleAction(event) {
+        const target = event.target;
+        const id = target.dataset.id;
+        const email = target.dataset.email;
+
+        if(target.classList.contains('delete')) {
+            if (confirm('Are you sure you want to permanently delete this user? This cannot be undone.')) {
+                await deleteDoc(doc(db, 'users', id));
+                alert('User deleted.');
+                loadUsers();
+            }
+        } else if (target.classList.contains('disable')) {
+            await updateDoc(doc(db, 'users', id), { disabled: true });
+            alert('User disabled.');
+            loadUsers();
+        } else if (target.classList.contains('enable')) {
+            await updateDoc(doc(db, 'users', id), { disabled: false });
+            alert('User enabled.');
+            loadUsers();
+        } else if (target.classList.contains('reset')) {
+            sendPasswordResetEmail(auth, email)
+                .then(() => alert('Password reset email sent to ' + email))
+                .catch(err => alert('Error: ' + err.message));
+        }
+    }
+  </script>
+</body>
+</html>

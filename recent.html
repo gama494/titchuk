@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Recently Played</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header style="padding: 15px; background: #1e1e1e; color: white;">
+    <a href="index.html" style="color: #ff4d4d; text-decoration: none;"><i class='bx bx-left-arrow-alt'></i> Back to Home</a>
+    <h2>Recently Played Songs</h2>
+  </header>
+
+  <div class="music-list items" style="padding: 20px;"></div>
+  <footer class="footer">
+    <div class="footer-content">
+      <p><i class='bx bxs-map'></i> Located in <strong>Lilongwe, Area 18B – Sent Market</strong></p>
+
+    <div class="social-icons">
+      <p>&copy; 2025 <strong>TITCHUKE MUSIC</strong>. All rights reserved.</p>
+      <p>Contact Us these through platforms</p>
+      <div class="social-icons">
+        <a href="https://web.facebook.com/profile.php?id=61561331881499" target="_blank"><i class='bx bxl-facebook-circle'></i></a>
+        <a href="https://wa.me/0981467345" target="_blank"><i class='bx bxl-whatsapp'></i></a>
+        <a href="https://youtube.com" target="_blank"><i class='bx bxl-youtube'></i></a>
+        <a href="https://instagram.com" target="_blank"><i class='bx bxl-instagram'></i></a>
+      </div>
+      <p>Designed by <strong>Kris Tech</strong></p>
+    </div>
+  </footer>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      getDocs
+      
+    } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import {
+      getAuth,
+      onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+      authDomain: "music-upload-30cc3.firebaseapp.com",
+      projectId: "music-upload-30cc3",
+      storageBucket: "music-upload-30cc3.firebasestorage.app",
+      messagingSenderId: "385597338493",
+      appId: "1:385597338493:web:04696d4dc201e8427e1214"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const container = document.querySelector(".music-list.items");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        container.innerHTML = "<p>Please <a href='signin.html'>log in</a> to see your recently played songs.</p>";
+        return;
+      }
+
+      const userId = user.uid;
+      const snapshot = await getDocs(collection(db, 'music'));
+      const recentSongs = [];
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.views && data.views.includes(userId)) {
+          recentSongs.push({ id: doc.id, ...data });
+        }
+      });
+
+      if (recentSongs.length === 0) {
+        container.innerHTML = "<p>You haven't played any songs yet.</p>";
+        return;
+      }
+
+      const songIdsForPlaylist = recentSongs.map(s => s.id);
+
+      container.innerHTML = '';
+      recentSongs.forEach(song => {
+        const { id, title, artist, posterUrl, audioUrl, views = [], likes = [], downloads = [] } = song;
+
+        const card = document.createElement("div");
+        card.className = "artist-song-card";
+        card.innerHTML = `
+          <img src="${posterUrl}" class="poster" alt="${title}">
+          <div class="details">
+            <h3>${title}</h3>
+            <p>By ${artist}</p>
+            <div class="actions" style="border-top: none; padding-top: 5px; justify-content: flex-start; gap: 15px;">
+              <span><i class='bx bx-like'></i> ${likes.length}</span>
+              <span><i class='bx bx-show'></i> ${views.length}</span>
+              <span><i class='bx bxs-download'></i> ${downloads.length}</span>
+            </div>
+          </div>
+           <button class="play-btn-sm" title="Play ${title}"><i class='bx bx-play'></i></button>
+        `;
+
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.actions')) return;
+            sessionStorage.setItem('currentPlaylist', JSON.stringify(songIdsForPlaylist));
+            window.location.href = `player.html?id=${id}`;
+        });
+
+        container.appendChild(card);
+      });
+    });
+  </script>
+
+</body>
+</html>
+    

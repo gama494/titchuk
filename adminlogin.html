@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login | Titchuke</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme auth-body">
+
+  <div class="auth-box">
+    <h2>Admin Login</h2>
+    <input type="email" id="admin-email" placeholder="Email" required>
+    <input type="password" id="admin-password" placeholder="Password" required>
+    <button onclick="loginAdmin()">Login</button>
+    <div class="error" id="login-error"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+      authDomain: "music-upload-30cc3.firebaseapp.com",
+      projectId: "music-upload-30cc3",
+      storageBucket: "music-upload-30cc3.firebasestorage.app",
+      messagingSenderId: "385597338493",
+      appId: "1:385597338493:web:04696d4dc201e8427e1214"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.loginAdmin = async function () {
+      const email = document.getElementById("admin-email").value;
+      const password = document.getElementById("admin-password").value;
+      const errorBox = document.getElementById("login-error");
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // ✅ Only allow known admin email
+        if (user.email === 'innocentbenard079@gmail.com') {
+          window.location.href = "admin.html"; // Redirect to admin dashboard
+        } else {
+          errorBox.textContent = "You are not authorized as admin.";
+        }
+
+      } catch (error) {
+        errorBox.textContent = error.message.replace("Firebase: ", "");
+      }
+    };
+  </script>
+
+</body>
+</html>

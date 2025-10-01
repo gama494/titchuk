@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Download</title>
+
+  <!-- Firebase SDK (v8 or v9, choose one approach) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+  <!-- Your HTML content here -->
+  <button onclick="downloadMusic('songId', 'songUrl', this)">Download</button>
+  <p>Balance: <span id="user-balance">0 MK</span></p>
+
+  <!-- Place your script at the end of the body or use defer attribute -->
+  <script>
+    // Firebase config and initialization
+    const firebaseConfig = {
+  apiKey: "AIzaSyDmaYvNa17qbwVkH2uiiK6PSDInRUoCoAk",
+  authDomain: "music-upload-3f7fe.firebaseapp.com",
+  projectId: "music-upload-3f7fe",
+  storageBucket: "music-upload-3f7fe.appspot.com",
+  messagingSenderId: "197791116274",
+  appId: "1:197791116274:web:d54d6ad4135968c9cb196b"
+};
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let allMusic = [];
+let currentAudio = null;
+
+    // Download Music Function
+    async function downloadMusic(id, url, button) {
+      const musicRef = db.collection('music').doc(id);  // Firebase Firestore reference
+      const musicSnap = await musicRef.get();
+
+      if (!musicSnap.exists) {
+        console.log("No such document!");
+        return;
+      }
+
+      const data = musicSnap.data();
+
+      // Update downloads count each time a song is downloaded
+      await musicRef.update({
+        downloads: (data.downloads || 0) + 1,
+      });
+
+      // Increment user's balance by 10 MK after a download
+      incrementUserBalance();
+
+      // Create a link to download the music
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${id}.mp3`;
+      link.click();
+    }
+
+    // Function to increment the user's balance by 10 MK after a download
+    async function incrementUserBalance() {
+      const userId = getUserId(); // Get the current user's ID
+      if (userId) {
+        const userRef = db.collection('users').doc(userId); // Reference to the current user's document
+        const userSnap = await userRef.get();
+
+        if (userSnap.exists) {
+          const currentBalance = userSnap.data().balance || 0; // Get current balance
+          const newBalance = currentBalance + 10; // Add 10 MK for the download
+
+          // Update user's balance in the database
+          await userRef.update({ balance: newBalance });
+
+          // Display the updated balance on the user dashboard
+          document.getElementById('user-balance').innerText = `${newBalance} MK`;
+        } else {
+          console.log("User not found.");
+        }
+      }
+    }
+
+    // Function to get the current user's ID
+    function getUserId() {
+      const user = auth.currentUser;
+      return user ? user.uid : null; // Returns user ID or null if not logged in
+    }
+    
+// Display Music on Page
+function displayMusic(musicList) {
+  const container = document.getElementById('music-list');
+  container.innerHTML = '';
+
+  musicList.forEach(({ id, title, artist, posterUrl, audioUrl, views = 0, downloads = 0, likes = 0 }) => {
+    const card = document.createElement('div');
+    card.className = 'music-card';
+    card.innerHTML = `
+      <a href="music-details.html?id=${id}">
+        <img src="${posterUrl}" alt="${title}">
+      </a>
+      <p class="music-title">${title}</p>
+      <p class="music-artist">${artist}</p>
+      <div class="music-actions">
+        <button onclick="togglePlay('${id}', '${audioUrl}', this)"><i class="fas fa-play"></i></button>
+        <button onclick="downloadMusic('${id}', '${audioUrl}', this)"><i class="fas fa-download"></i> <span>${downloads}</span></button>
+        <button onclick="likeMusic('${id}', this)"><i class="fas fa-heart"></i> <span>${likes}</span></button>
+        <button onclick="copyLink('${audioUrl}')"><i class="fas fa-link"></i> Copy </button>
+      </div>
+      <div class="music-stats">
+        <span><i class="fas fa-eye"></i> ${views}</span>
+      </div>
+      <div class="progress-bar" onclick="seek(event)">
+        <div class="progress"></div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// Load Music from Firestore
+async function loadMusic() {
+  const querySnapshot = await getDocs(collection(db, 'music'));
+  allMusic = querySnapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+  displayMusic(allMusic);
+}
+
+  </script>
+</body>
+</html>
+
+
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+    authDomain: "music-upload-30cc3.firebaseapp.com",
+    projectId: "music-upload-30cc3",
+    storageBucket: "music-upload-30cc3.firebasestorage.app",
+    messagingSenderId: "385597338493",
+    appId: "1:385597338493:web:04696d4dc201e8427e1214"
+  };
+
+
+  .music-list .item img {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+  }

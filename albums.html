@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Albums - Titchuke Music</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.jpg" type="image/png" />
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+             <div>
+                <div class="logo">
+                  <button class="menu-btn" id="menu-close">
+                    <i class='bx bx-log-out-circle'></i>
+                  </button>
+                  <i class='bx bx-pulse'></i>
+                  <a href="index.html">Titchuke</a>
+                </div>
+        
+                <div class="menu">
+                  <h5>Menu</h5>
+                  <ul>
+                    <li><i class='bx bxs-home'></i><a href="index.html">Home</a></li>
+                    <li><i class='bx bxs-bolt-circle'></i><a href="exprole.html">Explore</a></li>
+                    <li><i class='bx bxs-volume-full'></i><a href="genres.html">Genres</a></li>
+                    <li class="active"><i class='bx bxs-album'></i><a href="albums.html">Albums</a></li>
+                    <li><i class='bx bxs-microphone'></i><a href="artist.html">Artists</a></li>
+                    <li><i class='bx bxs-radio'></i><a href="broadcast.html">Broadcasts</a></li>
+                    <li><i class='bx bxs-download'></i><a href="downloader.html">Download from Link</a></li>
+                  </ul>
+                </div>
+            </div>
+        </aside>
+
+        <main>
+            <header class="page-header">
+                <button class="menu-btn" id="menu-open">
+                    <i class='bx bx-menu'></i>
+                </button>
+                <h1>All Albums</h1>
+            </header>
+
+            <div id="album-grid" class="grid-container">
+                <!-- Album cards will be injected here -->
+            </div>
+        </main>
+    </div>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+            authDomain: "music-upload-30cc3.firebaseapp.com",
+            projectId: "music-upload-30cc3",
+            storageBucket: "music-upload-30cc3.firebasestorage.app",
+            messagingSenderId: "385597338493",
+            appId: "1:385597338493:web:04696d4dc201e8427e1214"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadAlbums() {
+            const grid = document.getElementById('album-grid');
+            grid.innerHTML = '<p>Loading albums...</p>';
+            
+            const albumsQuery = query(collection(db, 'albums'), orderBy('timestamp', 'desc'));
+            const snapshot = await getDocs(albumsQuery);
+
+            if (snapshot.empty) {
+                grid.innerHTML = '<p>No albums have been created yet.</p>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            snapshot.forEach(doc => {
+                const album = { id: doc.id, ...doc.data() };
+                const card = document.createElement('a');
+                card.href = `album-details.html?id=${album.id}`;
+                card.className = 'album-card';
+                card.innerHTML = `
+                    <img src="${album.posterUrl}" alt="${album.title}" loading="lazy">
+                    <div class="album-card-info">
+                        <h4>${album.title}</h4>
+                        <p>${album.artist}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        loadAlbums();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+          const menuOpen = document.getElementById("menu-open");
+          const menuClose = document.getElementById("menu-close");
+          const sidebar = document.querySelector(".sidebar");
+          if (menuOpen && sidebar) {
+            menuOpen.addEventListener("click", () => sidebar.classList.add("open"));
+          }
+          if (menuClose && sidebar) {
+            menuClose.addEventListener("click", () => sidebar.classList.remove("open"));
+          }
+        });
+    </script>
+</body>
+</html>

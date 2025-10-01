@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore - Titchuke Music</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="page-header">
+      <a href="index.html" class="back-link"><i class='bx bx-arrow-back'></i> Back to Home</a>
+      <h1>Explore Titchuke</h1>
+      <p>Discover new songs, posters, and learn more about our platform</p>
+    </header>
+
+  <main class="page-content">
+    <div class="explore-container" id="exploreContainer">
+      <!-- Cards will be loaded here -->
+    </div>
+  </main>
+  
+  <footer class="footer">
+    <div class="footer-content">
+      <p><i class='bx bxs-map'></i> Located in <strong>Lilongwe, Area 18B – Sent Market</strong></p>
+
+    <div class="social-icons">
+      <p>&copy; 2025 <strong>TITCHUKE MUSIC</strong>. All rights reserved.</p>
+      <p>Contact Us these through platforms</p>
+      <div class="social-icons">
+        <a href="https://web.facebook.com/profile.php?id=61561331881499" target="_blank"><i class='bx bxl-facebook-circle'></i></a>
+        <a href="https://wa.me/0981467345" target="_blank"><i class='bx bxl-whatsapp'></i></a>
+        <a href="https://youtube.com" target="_blank"><i class='bx bxl-youtube'></i></a>
+        <a href="https://instagram.com" target="_blank"><i class='bx bxl-instagram'></i></a>
+      </div>
+      <p>Designed by <strong>Kris Tech</strong></p>
+    </div>
+  </footer>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      orderBy
+    } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+      authDomain: "music-upload-30cc3.firebaseapp.com",
+      projectId: "music-upload-30cc3",
+      storageBucket: "music-upload-30cc3.firebasestorage.app",
+      messagingSenderId: "385597338493",
+      appId: "1:385597338493:web:04696d4dc201e8427e1214"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const container = document.getElementById("exploreContainer");
+
+    async function loadExploreItems() {
+      const snapshot = await getDocs(query(collection(db, 'music'), orderBy('timestamp', 'desc')));
+      if (snapshot.empty) {
+        container.innerHTML = '<p style="color: white;">No music to explore yet.</p>';
+        return;
+      }
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        const card = document.createElement("div");
+        card.className = "explore-card";
+        card.innerHTML = `
+          <img src="${data.posterUrl}" alt="${data.title}">
+          <h3>${data.title}</h3>
+          <p>By ${data.artist}</p>
+          <p><strong>Genre:</strong> ${data.genres?.join(', ') || 'Unknown'}</p>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    loadExploreItems();
+  </script>
+
+</body>
+</html>

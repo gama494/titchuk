@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artists - Titchuke</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="page-header">
+    <a href="index.html" class="back-link"><i class='bx bx-arrow-back'></i> Back to Home</a>
+    <h1>All Artists</h1>
+  </header>
+
+  <main class="page-content">
+    <div class="artist-list" id="artistList"></div>
+    <div class="song-list-container" id="songList"></div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      query,
+      where
+    } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
+      authDomain: "music-upload-30cc3.firebaseapp.com",
+      projectId: "music-upload-30cc3",
+      storageBucket: "music-upload-30cc3.firebasestorage.app",
+      messagingSenderId: "385597338493",
+      appId: "1:385597338493:web:04696d4dc201e8427e1214"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const artistList = document.getElementById("artistList");
+    const songList = document.getElementById("songList");
+
+    const snapshot = await getDocs(collection(db, 'music'));
+    const artists = new Set();
+    const allSongs = [];
+
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (data.artist) artists.add(data.artist);
+      allSongs.push({ id: doc.id, ...data });
+    });
+
+    artistList.innerHTML = '';
+    artists.forEach(artist => {
+      const card = document.createElement("div");
+      card.className = "artist-card";
+      card.textContent = artist;
+      card.addEventListener("click", () => {
+        displaySongsByArtist(artist);
+      });
+      artistList.appendChild(card);
+    });
+
+    function displaySongsByArtist(artistName) {
+      songList.innerHTML = `<h3>Songs by ${artistName}</h3>`;
+      const filtered = allSongs.filter(song => song.artist === artistName);
+      const songIdsForPlaylist = filtered.map(s => s.id);
+
+      filtered.forEach(song => {
+        const songCard = document.createElement("div");
+        songCard.className = "artist-song-card";
+        songCard.innerHTML = `
+          <img src="${song.posterUrl}" alt="${song.title}" />
+          <div class="details">
+            <h4>${song.title}</h4>
+            <p>${song.artist}</p>
+          </div>
+          <button class="play-btn-sm" title="Play ${song.title}"><i class='bx bx-play'></i></button>
+        `;
+        songCard.addEventListener('click', () => {
+            sessionStorage.setItem('currentPlaylist', JSON.stringify(songIdsForPlaylist));
+            window.location.href = `player.html?id=${song.id}`;
+        });
+        songList.appendChild(songCard);
+      });
+    }
+  </script>
+</body>
+</html>
+    
