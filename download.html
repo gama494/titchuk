@@ -21,21 +21,23 @@
     const audio = params.get("audio");
 
     if (title && poster && audio) {
-      document.getElementById("title").textContent = `Now Downloading: ${title}`;
+      // Update page title and poster
+      document.getElementById("title").textContent = `Now Downloading: ${decodeURIComponent(title)}`;
       document.getElementById("poster").src = decodeURIComponent(poster);
 
+      // Generate Cloudinary download URL with custom filename
       const link = document.getElementById("downloadLink");
-      link.href = decodeURIComponent(audio);
-      
       const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}.mp3` : `${decodeURIComponent(title)}.mp3`;
+      const cloudinaryBase = decodeURIComponent(audio).replace(/(\.mp3)$/, ''); // Remove .mp3 extension if present
+      link.href = `${cloudinaryBase}/fl_attachment:${filename.replace(/[^a-zA-Z0-9-]/g, '_')}.mp3`;
       link.setAttribute("download", filename);
 
-      // Optional: Auto start download after delay
+      // Auto-start download after 1-second delay
       setTimeout(() => {
         link.click();
       }, 1000);
     } else {
-      document.body.innerHTML = "<p>Invalid download link</p>";
+      document.body.innerHTML = "<p>Invalid download link. Please ensure title, poster, and audio are provided.</p>";
     }
   </script>
 
