@@ -3,12 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <title>Downloading...</title>
+  <meta name="description" content="Download free MP3 songs from Titchuke.com. High-quality music and posters.">
+  <meta name="keywords" content="free mp3 download, titchuke music, latest songs 2025">
   <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MusicRecording",
+      "name": "<%= decodeURIComponent(params.get('title') || 'Unknown Title') %>",
+      "byArtist": {
+        "@type": "MusicGroup",
+        "name": "<%= decodeURIComponent(params.get('artist') || 'Unknown Artist') %>"
+      },
+      "genre": "Music",
+      "datePublished": "2025-10-05",
+      "url": "<%= 'https://titchuke.com/index.html?' + window.location.search %>",
+      "thumbnailUrl": "<%= decodeURIComponent(params.get('poster') || 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Poster') %>",
+      "contentUrl": "<%= decodeURIComponent(params.get('audio') || '') %>"
+    }
+  </script>
 </head>
 <body class="light-theme download-page-body">
 
   <div class="download-card">
-    <img id="poster" src="" alt="Music Poster" onerror="this.src='https://via.placeholder.com/300x400/cccccc/666666?text=No+Poster'">
+    <img id="poster" src="" alt="Music Poster" onerror="this.src='https://via.placeholder.com/300x300/cccccc/666666?text=No+Poster'">
     <h2 id="title">Downloading...</h2>
     <a id="downloadLink" class="download-link" href="#" download>Download Now</a>
     <p id="error" style="color: red; display: none;"></p>
@@ -22,24 +40,42 @@
     const audio = params.get("audio");
 
     if (title && poster && audio) {
+      // Update page title and poster
       document.getElementById("title").textContent = `Now Downloading: ${decodeURIComponent(title)} by ${decodeURIComponent(artist || '')}`;
       document.getElementById("poster").src = decodeURIComponent(poster);
 
+      // Generate filename
       const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}.mp3` : `${decodeURIComponent(title)}.mp3`;
       const link = document.getElementById("downloadLink");
-      
-      // Use PHP proxy for guaranteed filename (see Step 2)
-      link.href = `/proxy-download.php?audio=${encodeURIComponent(audio)}&filename=${encodeURIComponent(filename)}`;
-      link.setAttribute("download", filename); // Fallback for direct browsers
 
+      // Use PHP proxy for reliable filename
+      link.href = `/proxy-download.php?audio=${encodeURIComponent(audio)}&filename=${encodeURIComponent(filename)}`;
+      link.setAttribute("download", filename); // Fallback for some browsers
+
+      // Log for debugging
       console.log("Proxy URL:", link.href);
       console.log("Filename:", filename);
+      console.log("Audio URL:", decodeURIComponent(audio));
+      console.log("Poster URL:", decodeURIComponent(poster));
 
-      setTimeout(() => {
-        link.click();
-      }, 1000);
+      // Verify audio URL
+      fetch(decodeURIComponent(audio), { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            setTimeout(() => {
+              link.click();
+            }, 1000);
+          } else {
+            document.getElementById("error").textContent = "Error: Audio file not found. Please check the audio URL.";
+            document.getElementById("error").style.display = "block";
+          }
+        })
+        .catch(() => {
+          document.getElementById("error").textContent = "Error: Failed to verify audio file.";
+          document.getElementById("error").style.display = "block";
+        });
     } else {
-      document.body.innerHTML = "<p>Invalid download link</p>";
+      document.body.innerHTML = "<p>Invalid download link. Please ensure title, poster, and audio are provided.</p>";
     }
   </script>
 
