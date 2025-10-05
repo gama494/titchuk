@@ -27,10 +27,13 @@
 
       // Generate Cloudinary download URL with custom filename
       const link = document.getElementById("downloadLink");
-      const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}.mp3` : `${decodeURIComponent(title)}.mp3`;
-      const cloudinaryBase = decodeURIComponent(audio).replace(/(\.mp3)$/, ''); // Remove .mp3 extension if present
-      link.href = `${cloudinaryBase}/fl_attachment:${filename.replace(/[^a-zA-Z0-9-]/g, '_')}.mp3`;
-      link.setAttribute("download", filename);
+      const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}` : decodeURIComponent(title);
+      // Remove .mp3 from audio URL if present, ensure clean public ID
+      const cloudinaryBase = decodeURIComponent(audio).replace(/\.mp3$/, '');
+      // Sanitize filename for Cloudinary (no spaces, special chars)
+      const safeFilename = filename.replace(/[^a-zA-Z0-9-]/g, '_');
+      link.href = `${cloudinaryBase}/fl_attachment:${safeFilename}.mp3`;
+      link.setAttribute("download", `${filename}.mp3`);
 
       // Auto-start download after 1-second delay
       setTimeout(() => {
