@@ -8,7 +8,7 @@
 <body class="light-theme download-page-body">
 
   <div class="download-card">
-    <img id="poster" src="" alt="Music Poster" onerror="this.src='https://via.placeholder.com/300?text=No+Poster'">
+    <img id="poster" src="" alt="Music Poster" onerror="this.src='https://via.placeholder.com/300x400/cccccc/666666?text=No+Poster+Available'">
     <h2 id="title">Downloading...</h2>
     <a id="downloadLink" class="download-link" href="#" download>Download Now</a>
     <p id="error" style="color: red; display: none;"></p>
@@ -23,40 +23,52 @@
 
     if (title && poster && audio) {
       // Update page title and poster
-      document.getElementById("title").textContent = `Now Downloading: ${decodeURIComponent(title)}`;
+      document.getElementById("title").textContent = `Now Downloading: ${decodeURIComponent(title)} by ${decodeURIComponent(artist || '')}`;
       document.getElementById("poster").src = decodeURIComponent(poster);
 
-      // Generate Cloudinary download URL with custom filename
+      // Generate filename
+      const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}.mp3` : `${decodeURIComponent(title)}.mp3`;
+      
+      // Sanitize for Cloudinary (remove special chars, no extension in attachment name)
+      const safeName = filename.replace(/[^a-zA-Z0-9]/g, '_').replace(/\.mp3$/, '');
+      const cloudinaryBase = decodeURIComponent(audio).replace(/\.mp3$/, '');
+      const attachmentUrl = `${cloudinaryBase}/fl_attachment:${safeName}.mp3`;
+      
       const link = document.getElementById("downloadLink");
-      const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}` : decodeURIComponent(title);
-      const safeFilename = filename.replace(/[^a-zA-Z0-9-]/g, '_'); // Sanitize for Cloudinary
-      const cloudinaryBase = decodeURIComponent(audio).replace(/\.mp3$/, ''); // Remove .mp3 if present
-      const downloadUrl = `${cloudinaryBase}/fl_attachment:${safeFilename}.mp3`;
-      link.href = downloadUrl;
-      link.setAttribute("download", `${filename}.mp3`);
+      link.setAttribute("download", filename); // Always set for fallback
 
-      // Log URL for debugging
-      console.log("Download URL:", downloadUrl);
+      // Log for debugging
+      console.log("Base Audio URL:", cloudinaryBase + '.mp3');
+      console.log("Attachment URL:", attachmentUrl);
+      console.log("Filename:", filename);
 
-      // Verify audio URL exists before auto-download
-      fetch(downloadUrl, { method: 'HEAD' })
+      // Test attachment URL first
+      fetch(attachmentUrl, { method: 'HEAD' })
         .then(response => {
+          console.log("Attachment check status:", response.status);
           if (response.ok) {
-            // Auto-start download after 1-second delay
-            setTimeout(() => {
-              link.click();
-            }, 1000);
+            // Use attachment for custom name
+            link.href = attachmentUrl;
+            setTimeout(() => { link.click(); }, 1000);
           } else {
-            document.getElementById("error").textContent = "Error: Audio file not found. Please check the audio URL.";
+            // Fallback to raw URL + download attribute
+            console.log("Falling back to raw URL");
+            link.href = decodeURIComponent(audio);
+            setTimeout(() => { link.click(); }, 1000);
+            document.getElementById("error").textContent = "Using fallback download (filename may vary in some browsers).";
             document.getElementById("error").style.display = "block";
           }
         })
-        .catch(() => {
-          document.getElementById("error").textContent = "Error: Failed to verify audio file.";
+        .catch(err => {
+          console.error("Fetch error:", err);
+          // Fallback on any error
+          link.href = decodeURIComponent(audio);
+          setTimeout(() => { link.click(); }, 1000);
+          document.getElementById("error").textContent = "Download started (fallback mode).";
           document.getElementById("error").style.display = "block";
         });
     } else {
-      document.body.innerHTML = "<p>Invalid download link. Please ensure title, poster, and audio are provided.</p>";
+      document.body.innerHTML = "<p>Invalid download link. Missing title, poster, or audio.</p>";
     }
   </script>
 
