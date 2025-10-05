@@ -7,10 +7,10 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://titchuke.com/download.html?title=SI%20INE&artist=JAY%20FRO2</loc>
+    <loc>https://titchuke.com/index.html?title=SI%20INE&amp;artist=JAY%20FRO2</loc>
     <lastmod>2025-10-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- Add more <url> entries for each song, e.g., title=Song2&artist=Artist2 -->
+  <!-- Add more <url> entries for other songs, e.g., title=Song%20Name&amp;artist=Artist%20Name -->
 </urlset>
