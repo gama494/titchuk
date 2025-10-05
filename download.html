@@ -8,9 +8,10 @@
 <body class="light-theme download-page-body">
 
   <div class="download-card">
-    <img id="poster" src="" alt="Music Poster">
+    <img id="poster" src="" alt="Music Poster" onerror="this.src='https://via.placeholder.com/300?text=No+Poster'"> <!-- Fallback image -->
     <h2 id="title">Downloading...</h2>
     <a id="downloadLink" class="download-link" href="#" download>Download Now</a>
+    <p id="error" style="color: red; display: none;"></p>
   </div>
 
   <script>
@@ -28,17 +29,32 @@
       // Generate Cloudinary download URL with custom filename
       const link = document.getElementById("downloadLink");
       const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}` : decodeURIComponent(title);
-      // Remove .mp3 from audio URL if present, ensure clean public ID
-      const cloudinaryBase = decodeURIComponent(audio).replace(/\.mp3$/, '');
-      // Sanitize filename for Cloudinary (no spaces, special chars)
-      const safeFilename = filename.replace(/[^a-zA-Z0-9-]/g, '_');
-      link.href = `${cloudinaryBase}/fl_attachment:${safeFilename}.mp3`;
+      const safeFilename = filename.replace(/[^a-zA-Z0-9-]/g, '_'); // Sanitize for Cloudinary
+      const cloudinaryBase = decodeURIComponent(audio).replace(/\.mp3$/, ''); // Remove .mp3 if present
+      const downloadUrl = `${cloudinaryBase}/fl_attachment:${safeFilename}.mp3`;
+      link.href = downloadUrl;
       link.setAttribute("download", `${filename}.mp3`);
 
-      // Auto-start download after 1-second delay
-      setTimeout(() => {
-        link.click();
-      }, 1000);
+      // Log URL for debugging
+      console.log("Download URL:", downloadUrl);
+
+      // Verify audio URL exists before auto-download
+      fetch(downloadUrl, { method: 'HEAD' })
+        .then(response => {
+          if (response.ok) {
+            // Auto-start download after 1-second delay
+            setTimeout(() => {
+              link.click();
+            }, 1000);
+          } else {
+            document.getElementById("error").textContent = "Error: Audio file not found. Please check the audio URL.";
+            document.getElementById("error").style.display = "block";
+          }
+        })
+        .catch(() => {
+          document.getElementById("error").textContent = "Error: Failed to verify audio file.";
+          document.getElementById("error").style.display = "block";
+        });
     } else {
       document.body.innerHTML = "<p>Invalid download link. Please ensure title, poster, and audio are provided.</p>";
     }
