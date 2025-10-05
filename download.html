@@ -8,7 +8,7 @@
 <body class="light-theme download-page-body">
 
   <div class="download-card">
-    <img id="poster" src="" alt="Music Poster" onerror="this.src='https://via.placeholder.com/300x400/cccccc/666666?text=No+Poster+Available'">
+    <img id="poster" src="" alt="Music Poster" onerror="this.src='https://via.placeholder.com/300x400/cccccc/666666?text=No+Poster'">
     <h2 id="title">Downloading...</h2>
     <a id="downloadLink" class="download-link" href="#" download>Download Now</a>
     <p id="error" style="color: red; display: none;"></p>
@@ -22,53 +22,24 @@
     const audio = params.get("audio");
 
     if (title && poster && audio) {
-      // Update page title and poster
       document.getElementById("title").textContent = `Now Downloading: ${decodeURIComponent(title)} by ${decodeURIComponent(artist || '')}`;
       document.getElementById("poster").src = decodeURIComponent(poster);
 
-      // Generate filename
       const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}.mp3` : `${decodeURIComponent(title)}.mp3`;
-      
-      // Sanitize for Cloudinary (remove special chars, no extension in attachment name)
-      const safeName = filename.replace(/[^a-zA-Z0-9]/g, '_').replace(/\.mp3$/, '');
-      const cloudinaryBase = decodeURIComponent(audio).replace(/\.mp3$/, '');
-      const attachmentUrl = `${cloudinaryBase}/fl_attachment:${safeName}.mp3`;
-      
       const link = document.getElementById("downloadLink");
-      link.setAttribute("download", filename); // Always set for fallback
+      
+      // Use PHP proxy for guaranteed filename (see Step 2)
+      link.href = `/proxy-download.php?audio=${encodeURIComponent(audio)}&filename=${encodeURIComponent(filename)}`;
+      link.setAttribute("download", filename); // Fallback for direct browsers
 
-      // Log for debugging
-      console.log("Base Audio URL:", cloudinaryBase + '.mp3');
-      console.log("Attachment URL:", attachmentUrl);
+      console.log("Proxy URL:", link.href);
       console.log("Filename:", filename);
 
-      // Test attachment URL first
-      fetch(attachmentUrl, { method: 'HEAD' })
-        .then(response => {
-          console.log("Attachment check status:", response.status);
-          if (response.ok) {
-            // Use attachment for custom name
-            link.href = attachmentUrl;
-            setTimeout(() => { link.click(); }, 1000);
-          } else {
-            // Fallback to raw URL + download attribute
-            console.log("Falling back to raw URL");
-            link.href = decodeURIComponent(audio);
-            setTimeout(() => { link.click(); }, 1000);
-            document.getElementById("error").textContent = "Using fallback download (filename may vary in some browsers).";
-            document.getElementById("error").style.display = "block";
-          }
-        })
-        .catch(err => {
-          console.error("Fetch error:", err);
-          // Fallback on any error
-          link.href = decodeURIComponent(audio);
-          setTimeout(() => { link.click(); }, 1000);
-          document.getElementById("error").textContent = "Download started (fallback mode).";
-          document.getElementById("error").style.display = "block";
-        });
+      setTimeout(() => {
+        link.click();
+      }, 1000);
     } else {
-      document.body.innerHTML = "<p>Invalid download link. Missing title, poster, or audio.</p>";
+      document.body.innerHTML = "<p>Invalid download link</p>";
     }
   </script>
 
