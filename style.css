@@ -1,3 +1,4 @@
+
 /* Reset & Base */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Fira+Code&display=swap');
 
@@ -596,7 +597,7 @@ main > header {
   color: var(--text-primary);
 }
 
-.song-detail-info h2 {
+.song-detail-info .song-artist-detail {
   font-size: 1.2rem;
   font-weight: 400;
   color: var(--text-secondary);
@@ -623,6 +624,54 @@ main > header {
 
 #audio-player {
   width: 100%;
+}
+
+.song-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+.action-btn i {
+    font-size: 1.2rem;
+}
+
+.action-btn.like {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+.action-btn.like:hover {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+.action-btn.like.liked {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
+    box-shadow: 0 0 15px var(--danger-glow);
+}
+
+.action-btn.download {
+    background-color: var(--primary-color);
+    color: white;
+}
+.action-btn.download:hover {
+    background-color: var(--primary-hover-color);
+    transform: scale(1.05);
 }
 
 
