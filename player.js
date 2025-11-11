@@ -8,7 +8,8 @@ import {
   documentId,
   doc,
   updateDoc,
-  arrayUnion
+  arrayUnion,
+  arrayRemove
 } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
 
@@ -103,11 +104,13 @@ function renderPlayerUI() {
         </div>
       </div>
       <div class="player-controls">
+        <button id="like-btn" class="control-btn secondary" title="Like"><i class='bx bx-heart'></i></button>
         <button id="shuffle-btn" class="control-btn secondary" title="Shuffle"><i class='bx bx-shuffle'></i></button>
         <button id="prev-btn" class="control-btn" title="Previous"><i class='bx bx-skip-previous'></i></button>
         <button id="play-pause-btn" class="control-btn main" title="Play"><i class='bx bx-play'></i></button>
         <button id="next-btn" class="control-btn" title="Next"><i class='bx bx-skip-next'></i></button>
         <button id="repeat-btn" class="control-btn secondary" title="Repeat"><i class='bx bx-repeat'></i></button>
+        <button id="download-btn" class="control-btn secondary" title="Download"><i class='bx bxs-download'></i></button>
       </div>
     </div>
     <div class="playlist-container">
@@ -126,6 +129,15 @@ function updateUIForCurrentSong() {
   document.getElementById('song-title').textContent = song.title;
   document.getElementById('song-artist').textContent = song.artist;
   backgroundEl.style.backgroundImage = `url(${song.posterUrl})`;
+  
+  const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
+  const isLiked = likedSongs[song.id]?.includes(currentVisitorId);
+  const likeBtn = document.getElementById('like-btn');
+  if (likeBtn) {
+      likeBtn.classList.toggle('active', isLiked);
+      likeBtn.innerHTML = isLiked ? "<i class='bx bxs-heart'></i>" : "<i class='bx bx-heart'></i>";
+  }
+
   updatePlaylistUI();
 }
 
@@ -164,6 +176,8 @@ function attachEventListeners() {
   document.getElementById('prev-btn').addEventListener('click', playPrevious);
   document.getElementById('shuffle-btn').addEventListener('click', toggleShuffle);
   document.getElementById('repeat-btn').addEventListener('click', cycleRepeatMode);
+  document.getElementById('like-btn').addEventListener('click', toggleLike);
+  document.getElementById('download-btn').addEventListener('click', handleDownload);
 
   const progressContainer = document.getElementById('progress-bar-container');
   progressContainer.addEventListener('click', (e) => {
@@ -198,9 +212,9 @@ function attachEventListeners() {
 
 function loadSong(index) {
   currentIndex = index;
-  updateUIForCurrentSong();
   const song = playlist[currentIndex];
   recordView(song.id);
+  updateUIForCurrentSong();
   audio.src = song.audioUrl;
   audio.load();
   if (isPlaying) audio.play().catch(e => console.error("Error playing audio:", e));
@@ -229,6 +243,69 @@ function playPrevious() {
   let prevIndex = currentIndex - 1;
   if (prevIndex < 0) prevIndex = playlist.length - 1;
   loadSong(prevIndex);
+}
+
+async function toggleLike() {
+    if (!currentVisitorId || currentIndex < 0) return;
+
+    const song = playlist[currentIndex];
+    const songId = song.id;
+    const musicDocRef = doc(db, 'music', songId);
+
+    const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
+    const isLiked = likedSongs[songId]?.includes(currentVisitorId);
+
+    const likeBtn = document.getElementById('like-btn');
+    likeBtn.disabled = true;
+
+    try {
+        if (isLiked) {
+            await updateDoc(musicDocRef, { likes: arrayRemove(currentVisitorId) });
+            if (likedSongs[songId]) {
+                likedSongs[songId] = likedSongs[songId].filter(id => id !== currentVisitorId);
+            }
+        } else {
+            await updateDoc(musicDocRef, { likes: arrayUnion(currentVisitorId) });
+            if (!likedSongs[songId]) {
+                likedSongs[songId] = [];
+            }
+            likedSongs[songId].push(currentVisitorId);
+        }
+        localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
+        updateUIForCurrentSong(); // Re-render button state
+    } catch (error) {
+        console.error("Error toggling like:", error);
+    } finally {
+        likeBtn.disabled = false;
+    }
+}
+
+async function handleDownload() {
+    if (!currentVisitorId || currentIndex < 0) return;
+    
+    const song = playlist[currentIndex];
+    const songId = song.id;
+
+    const downloadedSongs = JSON.parse(localStorage.getItem('downloadedSongs') || '{}');
+    if (!downloadedSongs[songId]?.includes(currentVisitorId)) {
+        try {
+            const musicDocRef = doc(db, 'music', songId);
+            await updateDoc(musicDocRef, { downloads: arrayUnion(currentVisitorId) });
+
+            if(!downloadedSongs[songId]) downloadedSongs[songId] = [];
+            downloadedSongs[songId].push(currentVisitorId);
+            localStorage.setItem('downloadedSongs', JSON.stringify(downloadedSongs));
+        } catch (error) {
+            console.error("Error updating download count:", error);
+        }
+    }
+
+    const link = document.createElement('a');
+    link.href = song.audioUrl;
+    link.download = `${song.artist} - ${song.title}.mp3`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function toggleShuffle() {
@@ -274,7 +351,7 @@ function handleSongEnd() {
   }
 }
 
-// --- INITIALIZATION (🔥 FIXED) ---
+// --- INITIALIZATION ---
 async function initializePlayer() {
   const urlParams = new URLSearchParams(window.location.search);
   const songId = urlParams.get('id');
@@ -290,36 +367,25 @@ async function initializePlayer() {
     return;
   }
 
-  contentWrapper.innerHTML = `
-    <div class="player-loading">
-      <div class="loader"></div>
-      <p>Loading your music...</p>
-    </div>`;
+  contentWrapper.innerHTML = `<div class="player-loading"><div class="loader"></div><p>Loading your music...</p></div>`;
 
   try {
     const playlistIds = JSON.parse(playlistIdsStr);
     const fetchedSongs = [];
-    const chunkSize = 10;
 
-    // Fetch chunks in parallel for speed
-    const batchPromises = [];
-    for (let i = 0; i < playlistIds.length; i += chunkSize) {
-      const chunk = playlistIds.slice(i, i + chunkSize);
+    // 🔧 FIX: Split into chunks of 10 for Firestore 'in' query
+    for (let i = 0; i < playlistIds.length; i += 10) {
+      const chunk = playlistIds.slice(i, i + 10);
       const songsQuery = query(collection(db, 'music'), where(documentId(), 'in', chunk));
-      batchPromises.push(getDocs(songsQuery));
+      const snapshot = await getDocs(songsQuery);
+      snapshot.docs.forEach(doc => fetchedSongs.push({ id: doc.id, ...doc.data() }));
     }
 
-    const snapshots = await Promise.all(batchPromises);
-    snapshots.forEach(snapshot => {
-      snapshot.docs.forEach(d => fetchedSongs.push({ id: d.id, ...d.data() }));
-    });
-
-    // Keep order same as playlistIds
     playlist = playlistIds.map(id => fetchedSongs.find(s => s.id === id)).filter(Boolean);
     originalPlaylist = [...playlist];
 
     const initialIndex = playlist.findIndex(s => s.id === songId);
-    if (initialIndex === -1) throw new Error("Selected song not found in playlist.");
+    if (initialIndex === -1) throw new Error("Selected song not found.");
 
     renderPlayerUI();
     isPlaying = true;
