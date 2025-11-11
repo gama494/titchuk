@@ -107,7 +107,10 @@ async function recordView(songId) {
 
 // Toggle like status
 async function toggleLike() {
-    if (!currentVisitorId || !currentSongData) return;
+    if (!currentVisitorId || !currentSongData) {
+        alert("Please sign in to like songs.");
+        return;
+    }
     
     const songId = currentSongData.id;
     const musicDocRef = doc(db, 'music', songId);
@@ -208,10 +211,10 @@ async function loadMusicDetails(id) {
             downloadBtn.addEventListener('click', handleDownload);
 
         } else {
-            document.body.innerHTML = "<h2>Music not found!</h2><a href='index-1.html'>Go Home</a>";
+            document.body.innerHTML = "<h2>Music not found!</h2><a href='index.html'>Go Home</a>";
         }
     } catch (error) {
         console.error("Error fetching music details:", error);
-        document.body.innerHTML = "<h2>Error loading music details.</h2><a href='index-1.html'>Go Home</a>";
+        document.body.innerHTML = "<h2>Error loading music details.</h2><a href='index.html'>Go Home</a>";
     }
 }
