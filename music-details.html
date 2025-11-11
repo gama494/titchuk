@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,16 +49,21 @@
           <img id="poster" src="" alt="Song Poster">
         </div>
         <div class="song-detail-info">
-          <h1 id="title">Loading...</h1>
-          <h2 id="artist">by Loading...</h2>
-          <div class="song-stats">
-            <span><i class='bx bxs-download'></i> <span id="downloads">0</span> Downloads</span>
-            <span><i class='bx bxs-show'></i> <span id="views">0</span> Views</span>
-          </div>
-          <audio id="audio-player" controls>
-            <source id="audio-source" src="" type="audio/mpeg">
-            Your browser does not support the audio element.
-          </audio>
+            <h1 id="title">Loading...</h1>
+            <p id="artist" class="song-artist-detail">by Loading...</p>
+            <div class="song-stats">
+                <span><i class='bx bxs-heart'></i> <span id="likes">0</span> Likes</span>
+                <span><i class='bx bxs-show'></i> <span id="views">0</span> Views</span>
+                <span><i class='bx bxs-download'></i> <span id="downloads">0</span> Downloads</span>
+            </div>
+            <div class="song-actions">
+                <button id="like-btn" class="action-btn like"><i class='bx bx-heart'></i> <span>Like</span></button>
+                <a id="download-btn" href="#" class="action-btn download"><i class='bx bxs-download'></i> Download</a>
+            </div>
+            <audio id="audio-player" controls>
+                <source id="audio-source" src="" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
         </div>
       </div>
     </main>
