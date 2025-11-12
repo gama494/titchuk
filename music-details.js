@@ -73,8 +73,7 @@ function updateStats() {
 
 function updateLikeButtonState() {
     if (!currentSongData || !currentVisitorId) return;
-    const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
-    const isLiked = likedSongs[currentSongData.id]?.includes(currentVisitorId) || currentSongData.likes?.includes(currentVisitorId);
+    const isLiked = currentSongData.likes?.includes(currentVisitorId);
     
     likeBtn.classList.toggle('liked', isLiked);
     likeBtn.querySelector('i').classList.toggle('bxs-heart', isLiked);
@@ -93,17 +92,19 @@ async function recordView(songId) {
 
     try {
         const musicDocRef = doc(db, 'music', songId);
+        // Pessimistic write to DB
         await updateDoc(musicDocRef, { views: arrayUnion(currentVisitorId) });
         
+        // Update local state *after* successful write
+        if (!currentSongData.views.includes(currentVisitorId)) {
+            currentSongData.views.push(currentVisitorId);
+        }
+        updateStats();
+
+        // Update session storage to prevent re-counting
         viewedSongs.push(songId);
         sessionStorage.setItem('viewedSongs', JSON.stringify(viewedSongs));
         
-        // Re-fetch data to update UI with server state
-        const updatedDocSnap = await getDoc(musicDocRef);
-        if (updatedDocSnap.exists()) {
-            currentSongData.views = updatedDocSnap.data().views || [];
-            updateStats();
-        }
     } catch (error) {
         console.error("Error recording view:", error);
     }
@@ -112,39 +113,29 @@ async function recordView(songId) {
 // Toggle like status (once per person/device)
 async function toggleLike() {
     if (!currentVisitorId || !currentSongData) {
-        alert("Please sign in to like songs.");
+        alert("Please sign in or wait for the song to load to like it.");
         return;
     }
     
     const songId = currentSongData.id;
     const musicDocRef = doc(db, 'music', songId);
-    
-    const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
-    const isLiked = likedSongs[songId]?.includes(currentVisitorId) || currentSongData.likes?.includes(currentVisitorId);
+    const isLiked = currentSongData.likes?.includes(currentVisitorId);
 
     likeBtn.disabled = true;
 
     try {
         if (isLiked) {
             await updateDoc(musicDocRef, { likes: arrayRemove(currentVisitorId) });
-            if (likedSongs[songId]) {
-                likedSongs[songId] = likedSongs[songId].filter(id => id !== currentVisitorId);
-            }
+            currentSongData.likes = currentSongData.likes.filter(id => id !== currentVisitorId);
         } else {
             await updateDoc(musicDocRef, { likes: arrayUnion(currentVisitorId) });
-            if (!likedSongs[songId]) likedSongs[songId] = [];
-            likedSongs[songId].push(currentVisitorId);
+            if (!currentSongData.likes.includes(currentVisitorId)) {
+                currentSongData.likes.push(currentVisitorId);
+            }
         }
         
-        localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
-
-        // After successful write, get the canonical data from server
-        const updatedDoc = await getDoc(musicDocRef);
-        if (updatedDoc.exists()) {
-            currentSongData.likes = updatedDoc.data().likes || [];
-            updateStats();
-            updateLikeButtonState();
-        }
+        updateStats();
+        updateLikeButtonState();
 
     } catch (error) {
         console.error("Error toggling like:", error);
@@ -160,31 +151,30 @@ async function handleDownload(e) {
     if (!currentVisitorId || !currentSongData) return;
 
     const songId = currentSongData.id;
-    const downloadedSongs = JSON.parse(localStorage.getItem('downloadedSongs') || '{}');
-    const hasBeenCounted = downloadedSongs[songId]?.includes(currentVisitorId);
+    const downloadedSongs = JSON.parse(localStorage.getItem('downloadedSongs') || '[]');
+    const hasBeenCounted = downloadedSongs.includes(songId);
 
-    // Only update count if it hasn't been counted for this device before
     if (!hasBeenCounted) {
+        downloadBtn.disabled = true;
         try {
             const musicDocRef = doc(db, 'music', songId);
             await updateDoc(musicDocRef, { downloads: arrayUnion(currentVisitorId) });
 
-            if (!downloadedSongs[songId]) downloadedSongs[songId] = [];
-            downloadedSongs[songId].push(currentVisitorId);
+            if (!currentSongData.downloads.includes(currentVisitorId)) {
+                currentSongData.downloads.push(currentVisitorId);
+            }
+            updateStats();
+
+            downloadedSongs.push(songId);
             localStorage.setItem('downloadedSongs', JSON.stringify(downloadedSongs));
             
-            // Re-fetch to update UI from server
-            const updatedDoc = await getDoc(musicDocRef);
-            if (updatedDoc.exists()) {
-                currentSongData.downloads = updatedDoc.data().downloads || [];
-                updateStats();
-            }
         } catch (error) {
             console.error("Error updating download count:", error);
+        } finally {
+            downloadBtn.disabled = false;
         }
     }
     
-    // Always trigger the actual download
     const link = document.createElement('a');
     link.href = currentSongData.audioUrl;
     link.download = `${currentSongData.artist} - ${currentSongData.title}.mp3`;
@@ -194,7 +184,6 @@ async function handleDownload(e) {
 }
 
 // --- Initialization ---
-
 const urlParams = new URLSearchParams(window.location.search);
 const songId = urlParams.get("id");
 
@@ -205,14 +194,12 @@ if (!songId) {
         if (user) {
             currentVisitorId = user.uid;
         } else {
-            // Create a stable guest ID if one doesn't exist
             if (!localStorage.getItem('guestId')) {
                 const randomId = 'guest_' + Math.random().toString(36).substring(2, 15);
                 localStorage.setItem('guestId', randomId);
             }
             currentVisitorId = localStorage.getItem('guestId');
         }
-        
         loadMusicDetails(songId);
     });
 }
@@ -224,10 +211,10 @@ async function loadMusicDetails(id) {
 
         if (docSnap.exists()) {
             const musicData = { id: docSnap.id, ...docSnap.data() };
-            // Ensure arrays exist for optimistic updates
-            if (!musicData.likes) musicData.likes = [];
-            if (!musicData.views) musicData.views = [];
-            if (!musicData.downloads) musicData.downloads = [];
+            // Ensure arrays exist to prevent errors on new songs
+            musicData.likes = musicData.likes || [];
+            musicData.views = musicData.views || [];
+            musicData.downloads = musicData.downloads || [];
             
             updateUI(musicData);
 
@@ -243,4 +230,3 @@ async function loadMusicDetails(id) {
         document.body.innerHTML = "<h2>Error loading music details.</h2><a href='index.html'>Go Home</a>";
     }
 }
-
