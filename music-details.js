@@ -199,7 +199,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const songId = urlParams.get("id");
 
 if (!songId) {
-    document.body.innerHTML = "<h2>Invalid music link.</h2><a href='index-1.html'>Go Home</a>";
+    document.body.innerHTML = "<h2>Invalid music link.</h2><a href='index.html'>Go Home</a>";
 } else {
     onAuthStateChanged(auth, (user) => {
         if (user) {
@@ -236,10 +236,11 @@ async function loadMusicDetails(id) {
             downloadBtn.addEventListener('click', handleDownload);
 
         } else {
-            document.body.innerHTML = "<h2>Music not found!</h2><a href='index-1.html'>Go Home</a>";
+            document.body.innerHTML = "<h2>Music not found!</h2><a href='index.html'>Go Home</a>";
         }
     } catch (error) {
         console.error("Error fetching music details:", error);
-        document.body.innerHTML = "<h2>Error loading music details.</h2><a href='index-1.html'>Go Home</a>";
+        document.body.innerHTML = "<h2>Error loading music details.</h2><a href='index.html'>Go Home</a>";
     }
 }
+
