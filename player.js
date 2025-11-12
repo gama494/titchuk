@@ -66,6 +66,12 @@ async function recordView(songId) {
   try {
     const musicDocRef = doc(db, 'music', songId);
     await updateDoc(musicDocRef, { views: arrayUnion(currentVisitorId) });
+    
+    const songInPlaylist = playlist.find(s => s.id === songId);
+    if (songInPlaylist && !songInPlaylist.views.includes(currentVisitorId)) {
+        songInPlaylist.views.push(currentVisitorId);
+    }
+
     viewedSongs.push(songId);
     sessionStorage.setItem('viewedSongs', JSON.stringify(viewedSongs));
   } catch (error) {
@@ -128,8 +134,7 @@ function updateUIForCurrentSong() {
   document.getElementById('song-artist').textContent = song.artist;
   backgroundEl.style.backgroundImage = `url(${song.posterUrl})`;
   
-  const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
-  const isLiked = likedSongs[song.id]?.includes(currentVisitorId) || song.likes?.includes(currentVisitorId);
+  const isLiked = song.likes?.includes(currentVisitorId);
   const likeBtn = document.getElementById('like-btn');
   if (likeBtn) {
       likeBtn.classList.toggle('active', isLiked);
@@ -251,27 +256,18 @@ async function toggleLike() {
     const musicDocRef = doc(db, 'music', songId);
     const likeBtn = document.getElementById('like-btn');
     
-    const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
-    const isLiked = likedSongs[songId]?.includes(currentVisitorId) || song.likes?.includes(currentVisitorId);
+    const isLiked = song.likes?.includes(currentVisitorId);
     
     likeBtn.disabled = true;
     try {
         if (isLiked) {
             await updateDoc(musicDocRef, { likes: arrayRemove(currentVisitorId) });
-            if (likedSongs[songId]) {
-                likedSongs[songId] = likedSongs[songId].filter(id => id !== currentVisitorId);
-            }
+            playlist[currentIndex].likes = playlist[currentIndex].likes.filter(id => id !== currentVisitorId);
         } else {
             await updateDoc(musicDocRef, { likes: arrayUnion(currentVisitorId) });
-            if (!likedSongs[songId]) likedSongs[songId] = [];
-            likedSongs[songId].push(currentVisitorId);
-        }
-        localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
-        
-        // Re-fetch the song data to ensure our local state is accurate
-        const updatedSongSnap = await getDoc(musicDocRef);
-        if (updatedSongSnap.exists()) {
-          playlist[currentIndex].likes = updatedSongSnap.data().likes || [];
+            if (!playlist[currentIndex].likes.includes(currentVisitorId)) {
+                playlist[currentIndex].likes.push(currentVisitorId);
+            }
         }
         updateUIForCurrentSong();
     } catch (error) {
@@ -287,19 +283,26 @@ async function handleDownload() {
     
     const song = playlist[currentIndex];
     const songId = song.id;
-    const downloadedSongs = JSON.parse(localStorage.getItem('downloadedSongs') || '{}');
-    const hasBeenCounted = downloadedSongs[songId]?.includes(currentVisitorId);
+    const downloadBtn = document.getElementById('download-btn');
+    const downloadedSongs = JSON.parse(localStorage.getItem('downloadedSongs') || '[]');
+    const hasBeenCounted = downloadedSongs.includes(songId);
 
     if (!hasBeenCounted) {
+        downloadBtn.disabled = true;
         try {
             const musicDocRef = doc(db, 'music', songId);
             await updateDoc(musicDocRef, { downloads: arrayUnion(currentVisitorId) });
 
-            if(!downloadedSongs[songId]) downloadedSongs[songId] = [];
-            downloadedSongs[songId].push(currentVisitorId);
+            if (!playlist[currentIndex].downloads.includes(currentVisitorId)) {
+                playlist[currentIndex].downloads.push(currentVisitorId);
+            }
+            
+            downloadedSongs.push(songId);
             localStorage.setItem('downloadedSongs', JSON.stringify(downloadedSongs));
         } catch (error) {
             console.error("Error updating download count:", error);
+        } finally {
+            downloadBtn.disabled = false;
         }
     }
 
@@ -378,15 +381,19 @@ async function initializePlayer() {
     const playlistIds = JSON.parse(playlistIdsStr);
     const fetchedSongs = [];
 
-    // Firestore 'in' query is limited to 10 items, so we fetch in chunks.
     for (let i = 0; i < playlistIds.length; i += 10) {
       const chunk = playlistIds.slice(i, i + 10);
       const songsQuery = query(collection(db, 'music'), where(documentId(), 'in', chunk));
       const snapshot = await getDocs(songsQuery);
-      snapshot.docs.forEach(doc => fetchedSongs.push({ id: doc.id, ...doc.data() }));
+      snapshot.docs.forEach(doc => {
+          const songData = doc.data();
+          songData.likes = songData.likes || [];
+          songData.views = songData.views || [];
+          songData.downloads = songData.downloads || [];
+          fetchedSongs.push({ id: doc.id, ...songData });
+      });
     }
 
-    // Re-order the fetched songs to match the original playlist order.
     playlist = playlistIds.map(id => fetchedSongs.find(s => s.id === id)).filter(Boolean);
     originalPlaylist = [...playlist];
 
