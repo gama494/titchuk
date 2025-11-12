@@ -677,6 +677,21 @@ main > header {
     box-shadow: 0 5px 15px var(--primary-glow);
 }
 
+.action-btn.copy {
+    background-color: transparent;
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+.action-btn.copy:hover {
+    border-color: var(--info-color);
+    color: var(--info-color);
+}
+.action-btn.copy.copied {
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+
 
 /* Albums Page (ulbums.html) */
 .grid-container {
@@ -1169,6 +1184,16 @@ footer.footer {
 ==================================
 */
 
+/* --- Global Loader --- */
+.loader {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
 /* --- Downloader Page --- */
 .downloader-page {
   max-width: 800px;
@@ -1250,14 +1275,6 @@ footer.footer {
   flex-direction: column;
   align-items: center;
   gap: 15px;
-}
-.loader {
-  width: 50px;
-  height: 50px;
-  border: 5px solid var(--border-color);
-  border-top-color: var(--primary-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
 }
 #loader-text {
   color: var(--text-secondary);
@@ -1605,11 +1622,6 @@ footer.footer {
   border-radius: 50%;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg);}
-  to { transform: rotate(360deg);}
-}
-
 .broadcast-body .player h1 {
   font-size: 3rem;
   margin-bottom: 40px;
@@ -1936,44 +1948,6 @@ body.light-theme.auth-body {
 }
 
 
-/* Download Page */
-.download-page-body {
-  text-align: center;
-  background: var(--lt-bg);
-  padding: 50px;
-}
-.download-card {
-  background: var(--lt-card-bg);
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  max-width: 400px;
-  margin: auto;
-}
-.download-card img {
-  width: 200px;
-  border-radius: 10px;
-  margin-bottom: 20px;
-}
-.download-card h2 {
-  color: #333;
-}
-a.download-link {
-  display: inline-block;
-  margin-top: 20px;
-  background: var(--lt-primary-accent);
-  color: white;
-  padding: 12px 20px;
-  text-decoration: none;
-  font-weight: bold;
-  border-radius: 30px;
-  transition: background-color 0.3s;
-}
-a.download-link:hover {
-  background: var(--lt-primary-accent-hover);
-}
-
-
 /* 
 ==================================
   RESPONSIVE
@@ -2121,13 +2095,6 @@ a.download-link:hover {
   .control-btn { font-size: 1.8rem; }
   .control-btn.main { font-size: 3.5rem; }
   .control-btn.secondary { font-size: 1.3rem; }
-  
-  .dashboard-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .dashboard-header h1 { font-size: 1.2rem; flex-grow: unset; }
-  .header-right { width: 100%; justify-content: space-between; }
-  #music-list-container { grid-template-columns: 1fr; gap: 12px; }
-  .light-theme form label { margin-top: 12px; }
-  .light-theme form button { font-size: 1rem; padding: 10px; }
 }
 
 /* Burning animation for Top Hits icon */
@@ -2147,570 +2114,93 @@ a.download-link:hover {
     animation: burning-glow 2.5s ease-in-out infinite;
 }
 
-/* ==================================
-  ARTIST DASHBOARD - AWESOME MAKEOVER
-================================== */
-.dashboard-body {
-  background: linear-gradient(180deg, #111827 0%, #020617 100%);
-  color: var(--text-primary);
-  font-family: 'Poppins', sans-serif;
+/* Global loader animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.dashboard-wrapper {
-  max-width: 1100px;
-  margin: auto;
-  padding: 15px;
-}
-
-.dashboard-body .form-group {
-    margin-bottom: 1.25rem;
-}
-
-/* New Header */
-.dashboard-body .dashboard-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-color);
-  padding: 15px 25px;
-  border-radius: 12px;
-  position: sticky;
-  top: 10px;
-  z-index: 1000;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.dashboard-body .dashboard-header h1 {
-  color: var(--text-primary);
-  text-shadow: 0 0 8px var(--primary-glow);
-  font-size: 1.4rem;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dashboard-body .header-right {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.dashboard-body .balance-display {
-  background: var(--primary-color);
-  box-shadow: 0 0 15px var(--primary-glow);
-  font-size: 1.1rem;
-  font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 30px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.dashboard-body #header-withdraw-btn {
-  background: transparent;
-  border: 2px solid var(--primary-color);
-  color: var(--primary-color);
-  transition: all 0.3s ease;
-  font-weight: 700;
-  border-radius: 30px;
-  padding: 6px 18px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.dashboard-body #header-withdraw-btn:not(:disabled):hover {
-  background: var(--primary-color);
-  color: white;
-  box-shadow: 0 0 15px var(--primary-glow);
-}
-
-.dashboard-body #header-withdraw-btn:disabled {
-  border-color: #555;
-  color: #555;
-  cursor: not-allowed;
-}
-
-.dashboard-body #logout-button {
-  background: transparent;
-  border: none;
-  font-size: 1.8rem;
-  cursor: pointer;
-  color: var(--text-secondary);
-  transition: color 0.3s;
-}
-.dashboard-body #logout-button:hover {
-  color: var(--danger-color);
-}
-
-
-/* New Card Style */
-.dashboard-body .dashboard-card {
-  background: rgba(30, 41, 59, 0.5);
-  backdrop-filter: blur(5px);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  padding: 25px;
-  margin-top: 20px;
-  border-radius: 12px;
-}
-.dashboard-body .dashboard-card h2 {
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 10px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.4rem;
-  margin-top: 0;
-}
-
-
-/* New Form Styles */
-.dashboard-body form label {
-  color: var(--text-secondary);
-  font-weight: 500;
-  margin-bottom: 8px;
-  display: block;
-  margin-top: 0;
-}
-.dashboard-body form input[type="text"],
-.dashboard-body form select {
-  background: var(--background-color);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  padding: 12px;
-  margin-top: 0;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  width: 100%;
-  font-size: 1rem;
-}
-
-.dashboard-body form input[type="text"]:focus,
-.dashboard-body form select:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-glow);
-  outline: none;
-}
-.dashboard-body form input[type="file"] {
-  width: 100%;
-  background: var(--background-color);
-  border: 1px dashed var(--border-color);
-  color: var(--text-secondary);
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: 'Poppins', sans-serif;
-}
-.dashboard-body form input[type="file"]:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-}
-.dashboard-body form button[type="submit"] {
-  background: linear-gradient(90deg, var(--primary-color), var(--primary-hover-color));
-  font-size: 1.1rem;
-  font-weight: 700;
-  border-radius: 8px;
-  padding: 14px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px var(--primary-glow);
-  width: 100%;
-  margin-top: 24px;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
-.dashboard-body form button[type="submit"]:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
-}
-
-/* New Genre Checkboxes */
-.dashboard-body .genre-checkbox-container {
-  border: none;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 10px;
-}
-.dashboard-body .genre-checkbox-container div {
-  position: relative;
-}
-.dashboard-body .genre-checkbox-container label {
-  background: var(--background-color);
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--border-color);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  user-select: none;
-  color: var(--text-secondary);
-  display: block;
-  text-align: center;
-  width: 100%;
-}
-.dashboard-body .genre-checkbox-container label:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-}
-.dashboard-body .genre-checkbox-container input[type="checkbox"] {
-  display: none;
-}
-.dashboard-body .genre-checkbox-container input[type="checkbox"]:checked + label {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
-  box-shadow: 0 0 10px var(--primary-glow);
-}
-
-/* New Album Section */
-.dashboard-body .album-toggle {
-    margin-top: 20px;
-}
-.dashboard-body .album-toggle label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-primary);
-  font-weight: 500;
-}
-.dashboard-body #album-options {
-  background: var(--background-color);
-  border: 1px solid var(--border-color);
-  margin-top: 15px;
-  padding: 15px;
-  border-radius: 8px;
-}
-.album-choice-tabs {
-  display: flex;
-  margin-bottom: 20px;
-  background: #0F172A;
-  border-radius: 8px;
-  padding: 5px;
-}
-.album-tab-btn {
-  flex: 1;
-  padding: 10px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-weight: 600;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-}
-.album-tab-btn:disabled {
-  color: #444;
-  cursor: not-allowed;
-}
-.album-tab-btn.active {
-  background: var(--primary-color);
-  color: white;
-  box-shadow: 0 0 10px var(--primary-glow);
-}
-.album-tab-content {
-  display: none;
-}
-.album-tab-content.active {
-  display: block;
-}
-
-/* Existing Albums Grid */
-.existing-albums-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 15px;
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 5px;
-  margin-top: 10px;
-}
-.existing-album-card {
-  background: var(--background-color);
-  border: 2px solid var(--border-color);
-  border-radius: 8px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-.existing-album-card:hover {
-  border-color: var(--primary-color);
-  transform: translateY(-3px);
-}
-.existing-album-card.selected {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px var(--primary-glow);
-}
-.existing-album-card img {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  display: block;
-}
-.existing-album-card .album-card-title {
-  font-size: 0.85rem;
-  padding: 8px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  background: rgba(0,0,0,0.5);
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-}
-.edit-album-btn {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: rgba(0,0,0,0.7);
-  color: white;
-  border: none;
+.loader {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  font-size: 16px;
-  cursor: pointer;
+  animation: spin 1s linear infinite;
+}
+
+/* Download Page */
+.download-page-body {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s;
+  min-height: 100vh;
+  background: var(--background-color);
+  padding: 20px;
 }
-.existing-album-card:hover .edit-album-btn {
-  opacity: 1;
+.download-container {
+  background: var(--card-color);
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 400px;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
 }
-
-/* Edit Album Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
+.download-container .poster-wrapper {
+  width: 100%;
+  height: 250px;
+}
+.download-container .poster-wrapper img {
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(5px);
-  display: none; /* Hidden by default */
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  animation: fadeIn 0.3s ease;
-}
-@keyframes slideInUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-.modal-content {
-  background: var(--card-color);
-  padding: 30px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  position: relative;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  animation: slideInUp 0.4s ease;
-}
-.modal-close-btn {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 2rem;
-  cursor: pointer;
-  line-height: 1;
-}
-.modal-content h2 {
-    margin-top: 0;
-    margin-bottom: 25px;
-}
-#edit-album-form button[type="submit"] {
-  width: 100%;
-  margin-top: 20px;
-  padding: 12px;
-  background: var(--primary-color);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-/* New Music List Card */
-.dashboard-body .uploaded-music #music-list-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 18px;
-  margin-top: 15px;
-}
-
-#music-list-container .dashboard-music-card {
-  background: var(--card-color);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-}
-#music-list-container .dashboard-music-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 0 15px var(--primary-glow);
-  border-color: var(--primary-color);
-}
-.dashboard-music-card .card-poster {
-  width: 100%;
-  aspect-ratio: 16 / 10;
   object-fit: cover;
 }
-.dashboard-music-card .card-content {
-  padding: 15px;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
+.download-container .info-wrapper {
+  padding: 30px;
 }
-.dashboard-music-card .card-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 4px;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.dashboard-music-card .card-artist {
+.download-container .status-text {
+  color: var(--text-secondary);
   font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+.download-container h1 {
+  font-size: 1.8rem;
+  margin: 0;
+  color: var(--text-primary);
+}
+.download-container h2 {
+  font-size: 1.1rem;
   color: var(--text-secondary);
-  margin-bottom: 15px;
+  font-weight: 400;
+  margin-bottom: 25px;
 }
-.dashboard-music-card .card-album {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--background-color);
-    padding: 4px 8px;
-    border-radius: 4px;
-    align-self: flex-start;
-}
-.dashboard-music-card .card-earnings {
-  margin-top: auto;
-  padding: 10px;
-  background: rgba(40, 167, 69, 0.1);
-  border: 1px solid rgba(40, 167, 69, 0.4);
-  border-radius: 8px;
-  text-align: center;
-  color: #28a745;
-  font-weight: 700;
-  font-size: 1.2rem;
-}
-.dashboard-music-card .card-actions {
+#status-indicator {
   display: flex;
-  justify-content: space-around;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: var(--background-color);
   padding: 10px;
-  border-top: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 25px;
 }
-.dashboard-music-card .card-actions a,
-.dashboard-music-card .card-actions button {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.4rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  padding: 5px;
+#status-indicator i {
+    font-size: 24px;
+    color: var(--success-color);
 }
-.dashboard-music-card .card-actions a:hover,
-.dashboard-music-card .card-actions button:hover {
-  color: var(--primary-color);
-  transform: scale(1.1);
-}
-
-/* Dashboard Music Card Edit/Delete Actions */
-.dashboard-poster-container {
-    position: relative;
-}
-.dashboard-card-overlay-actions {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    gap: 8px;
-    background: rgba(0,0,0,0.6);
-    padding: 6px;
-    border-radius: 8px;
-    opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    z-index: 2;
-}
-.dashboard-music-card:hover .dashboard-card-overlay-actions {
-    opacity: 1;
-    transform: translateY(0);
-}
-.dashboard-card-overlay-actions button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 5px;
-    transition: color 0.2s, transform 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.dashboard-card-overlay-actions button:hover {
-    transform: scale(1.1);
-}
-.dashboard-card-overlay-actions .edit-music-btn:hover {
-    color: var(--primary-color);
-}
-.dashboard-card-overlay-actions .delete-music-btn:hover {
+#status-indicator i.bxs-error-circle {
     color: var(--danger-color);
 }
-
-/* Edit Music Modal Form */
-#edit-music-modal .form-group {
-    margin-bottom: 15px;
+.manual-download {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
-#edit-music-modal label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-#edit-music-modal input, #edit-music-modal button {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--background-color);
-    color: var(--text-primary);
-    font-size: 1rem;
-}
-#edit-music-modal button {
-    background: var(--primary-color);
-    color: white;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 10px;
-    border: none;
-}
-#edit-music-modal input[type="file"] {
-    padding: 10px;
+.manual-download a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: underline;
 }
