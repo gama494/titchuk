@@ -41,6 +41,26 @@ const audioSourceEl = document.getElementById("audio-source");
 const audioPlayerEl = document.getElementById("audio-player");
 const likeBtn = document.getElementById("like-btn");
 const downloadBtn = document.getElementById("download-btn");
+const copyLinkBtn = document.getElementById("copy-link-btn");
+
+/**
+ * Safely retrieves and parses an array from localStorage.
+ * This prevents errors from corrupted or non-array data.
+ * @param {string} key The localStorage key.
+ * @returns {Array} The parsed array or an empty array if an error occurs.
+ */
+function getArrayFromLocalStorage(key) {
+    try {
+        const item = localStorage.getItem(key);
+        if (!item) return [];
+        const parsed = JSON.parse(item);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+        console.warn(`Error parsing localStorage item "${key}". Resetting.`, e);
+        localStorage.removeItem(key); // Clear corrupted data
+        return [];
+    }
+}
 
 // Helper to format numbers like 1000 -> 1K
 function formatCount(num) {
@@ -73,7 +93,8 @@ function updateStats() {
 
 function updateLikeButtonState() {
     if (!currentSongData || !currentVisitorId) return;
-    const isLiked = currentSongData.likes?.includes(currentVisitorId);
+    const localLikedSongs = getArrayFromLocalStorage('likedSongs');
+    const isLiked = localLikedSongs.includes(currentSongData.id);
     
     likeBtn.classList.toggle('liked', isLiked);
     likeBtn.querySelector('i').classList.toggle('bxs-heart', isLiked);
@@ -83,32 +104,28 @@ function updateLikeButtonState() {
 
 // --- Interaction Handlers ---
 
-// Record view (once per browser session)
+// Record view on every play. Firestore handles uniqueness.
 async function recordView(songId) {
     if (!currentVisitorId) return;
 
-    const viewedSongs = JSON.parse(sessionStorage.getItem('viewedSongs') || '[]');
-    if (viewedSongs.includes(songId)) return;
-
     try {
         const musicDocRef = doc(db, 'music', songId);
-        // Pessimistic write to DB
+        // arrayUnion is idempotent: it won't add a duplicate visitorId.
+        // This is safe and efficient to call on every play event.
         await updateDoc(musicDocRef, { views: arrayUnion(currentVisitorId) });
         
-        // Update local state *after* successful write
-        if (!currentSongData.views.includes(currentVisitorId)) {
-            currentSongData.views.push(currentVisitorId);
+        // To ensure the UI updates if the count changes, we re-fetch the data.
+        const updatedDoc = await getDoc(musicDocRef);
+        if (updatedDoc.exists()) {
+            currentSongData.views = updatedDoc.data().views || [];
+            updateStats();
         }
-        updateStats();
-
-        // Update session storage to prevent re-counting
-        viewedSongs.push(songId);
-        sessionStorage.setItem('viewedSongs', JSON.stringify(viewedSongs));
-        
     } catch (error) {
+        // Silently fail on view recording to not interrupt user experience.
         console.error("Error recording view:", error);
     }
 }
+
 
 // Toggle like status (once per person/device)
 async function toggleLike() {
@@ -119,20 +136,27 @@ async function toggleLike() {
     
     const songId = currentSongData.id;
     const musicDocRef = doc(db, 'music', songId);
-    const isLiked = currentSongData.likes?.includes(currentVisitorId);
+    const localLikedSongs = getArrayFromLocalStorage('likedSongs');
+    const isLiked = localLikedSongs.includes(songId);
 
     likeBtn.disabled = true;
 
     try {
         if (isLiked) {
             await updateDoc(musicDocRef, { likes: arrayRemove(currentVisitorId) });
-            currentSongData.likes = currentSongData.likes.filter(id => id !== currentVisitorId);
+            const index = localLikedSongs.indexOf(songId);
+            if (index > -1) localLikedSongs.splice(index, 1);
         } else {
             await updateDoc(musicDocRef, { likes: arrayUnion(currentVisitorId) });
-            if (!currentSongData.likes.includes(currentVisitorId)) {
-                currentSongData.likes.push(currentVisitorId);
+            if (!localLikedSongs.includes(songId)) {
+                localLikedSongs.push(songId);
             }
         }
+        
+        localStorage.setItem('likedSongs', JSON.stringify(localLikedSongs));
+
+        const updatedDoc = await getDoc(musicDocRef);
+        currentSongData.likes = updatedDoc.data().likes || [];
         
         updateStats();
         updateLikeButtonState();
@@ -145,43 +169,57 @@ async function toggleLike() {
     }
 }
 
-// Handle download and count (once per person/device)
+
+// Handle download and count. Firestore handles uniqueness.
 async function handleDownload(e) {
     e.preventDefault();
     if (!currentVisitorId || !currentSongData) return;
 
     const songId = currentSongData.id;
-    const downloadedSongs = JSON.parse(localStorage.getItem('downloadedSongs') || '[]');
-    const hasBeenCounted = downloadedSongs.includes(songId);
+    downloadBtn.disabled = true;
 
-    if (!hasBeenCounted) {
-        downloadBtn.disabled = true;
-        try {
-            const musicDocRef = doc(db, 'music', songId);
-            await updateDoc(musicDocRef, { downloads: arrayUnion(currentVisitorId) });
+    try {
+        const musicDocRef = doc(db, 'music', songId);
+        // Atomically update the download count. arrayUnion prevents duplicates.
+        await updateDoc(musicDocRef, { downloads: arrayUnion(currentVisitorId) });
 
-            if (!currentSongData.downloads.includes(currentVisitorId)) {
-                currentSongData.downloads.push(currentVisitorId);
-            }
-            updateStats();
-
-            downloadedSongs.push(songId);
-            localStorage.setItem('downloadedSongs', JSON.stringify(downloadedSongs));
-            
-        } catch (error) {
-            console.error("Error updating download count:", error);
-        } finally {
-            downloadBtn.disabled = false;
+        const updatedDoc = await getDoc(musicDocRef);
+        if (updatedDoc.exists()) {
+            currentSongData.downloads = updatedDoc.data().downloads || [];
+            updateStats(); // Refresh the UI with the new count
         }
+    } catch (error) {
+        console.error("Error updating download count:", error);
+        // Don't block the download even if counting fails.
+    } finally {
+        downloadBtn.disabled = false;
     }
     
-    const link = document.createElement('a');
-    link.href = currentSongData.audioUrl;
-    link.download = `${currentSongData.artist} - ${currentSongData.title}.mp3`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Always proceed to the download page for a consistent experience.
+    const downloadUrl = `download.html?title=${encodeURIComponent(currentSongData.title)}&artist=${encodeURIComponent(currentSongData.artist)}&poster=${encodeURIComponent(currentSongData.posterUrl)}&audio=${encodeURIComponent(currentSongData.audioUrl)}`;
+    window.open(downloadUrl, '_blank');
 }
+
+function handleCopyLink() {
+    if (!currentSongData) return;
+    const detailPageUrl = window.location.href;
+    navigator.clipboard.writeText(detailPageUrl).then(() => {
+        const btnSpan = copyLinkBtn.querySelector('span');
+        const originalText = btnSpan.innerText;
+        btnSpan.innerText = 'Copied!';
+        copyLinkBtn.classList.add('copied');
+        copyLinkBtn.disabled = true;
+        setTimeout(() => {
+            btnSpan.innerText = originalText;
+            copyLinkBtn.classList.remove('copied');
+            copyLinkBtn.disabled = false;
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy link: ', err);
+        alert('Failed to copy link.');
+    });
+}
+
 
 // --- Initialization ---
 const urlParams = new URLSearchParams(window.location.search);
@@ -218,9 +256,11 @@ async function loadMusicDetails(id) {
             
             updateUI(musicData);
 
+            // Record a view every time the user presses play.
             audioPlayerEl.addEventListener('play', () => recordView(id));
             likeBtn.addEventListener('click', toggleLike);
             downloadBtn.addEventListener('click', handleDownload);
+            copyLinkBtn.addEventListener('click', handleCopyLink);
 
         } else {
             document.body.innerHTML = "<h2>Music not found!</h2><a href='index.html'>Go Home</a>";
