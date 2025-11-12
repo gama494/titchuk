@@ -42,7 +42,7 @@ const audioPlayerEl = document.getElementById("audio-player");
 const likeBtn = document.getElementById("like-btn");
 const downloadBtn = document.getElementById("download-btn");
 
-// Helper to format numbers
+// Helper to format numbers like 1000 -> 1K
 function formatCount(num) {
     if (num === null || num === undefined) return '0';
     if (num < 1000) return num.toString();
@@ -53,7 +53,7 @@ function formatCount(num) {
 // Update UI with song data
 function updateUI(music) {
     currentSongData = music;
-    document.title = `${music.title} by ${music.artist} - TITCHUKE`;
+    document.title = `${music.title} by ${music.artist} - Titchuke`;
     titleEl.innerText = music.title;
     artistEl.innerText = `by ${music.artist}`;
     posterEl.src = music.posterUrl;
@@ -73,7 +73,9 @@ function updateStats() {
 
 function updateLikeButtonState() {
     if (!currentSongData || !currentVisitorId) return;
-    const isLiked = currentSongData.likes?.includes(currentVisitorId);
+    const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
+    const isLiked = likedSongs[currentSongData.id]?.includes(currentVisitorId) || currentSongData.likes?.includes(currentVisitorId);
+    
     likeBtn.classList.toggle('liked', isLiked);
     likeBtn.querySelector('i').classList.toggle('bxs-heart', isLiked);
     likeBtn.querySelector('i').classList.toggle('bx-heart', !isLiked);
@@ -82,7 +84,7 @@ function updateLikeButtonState() {
 
 // --- Interaction Handlers ---
 
-// Record view (once per session)
+// Record view (once per browser session)
 async function recordView(songId) {
     if (!currentVisitorId) return;
 
@@ -96,16 +98,18 @@ async function recordView(songId) {
         viewedSongs.push(songId);
         sessionStorage.setItem('viewedSongs', JSON.stringify(viewedSongs));
         
-        // Optimistically update UI
-        currentSongData.views = [...(currentSongData.views || []), currentVisitorId];
-        updateStats();
-
+        // Re-fetch data to update UI with server state
+        const updatedDocSnap = await getDoc(musicDocRef);
+        if (updatedDocSnap.exists()) {
+            currentSongData.views = updatedDocSnap.data().views || [];
+            updateStats();
+        }
     } catch (error) {
         console.error("Error recording view:", error);
     }
 }
 
-// Toggle like status
+// Toggle like status (once per person/device)
 async function toggleLike() {
     if (!currentVisitorId || !currentSongData) {
         alert("Please sign in to like songs.");
@@ -114,39 +118,53 @@ async function toggleLike() {
     
     const songId = currentSongData.id;
     const musicDocRef = doc(db, 'music', songId);
-    const isLiked = currentSongData.likes?.includes(currentVisitorId);
+    
+    const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
+    const isLiked = likedSongs[songId]?.includes(currentVisitorId) || currentSongData.likes?.includes(currentVisitorId);
 
     likeBtn.disabled = true;
 
     try {
         if (isLiked) {
             await updateDoc(musicDocRef, { likes: arrayRemove(currentVisitorId) });
-            // Optimistically update local state
-            currentSongData.likes = currentSongData.likes.filter(id => id !== currentVisitorId);
+            if (likedSongs[songId]) {
+                likedSongs[songId] = likedSongs[songId].filter(id => id !== currentVisitorId);
+            }
         } else {
             await updateDoc(musicDocRef, { likes: arrayUnion(currentVisitorId) });
-            // Optimistically update local state
-            currentSongData.likes = [...(currentSongData.likes || []), currentVisitorId];
+            if (!likedSongs[songId]) likedSongs[songId] = [];
+            likedSongs[songId].push(currentVisitorId);
         }
-        updateStats();
-        updateLikeButtonState();
+        
+        localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
+
+        // After successful write, get the canonical data from server
+        const updatedDoc = await getDoc(musicDocRef);
+        if (updatedDoc.exists()) {
+            currentSongData.likes = updatedDoc.data().likes || [];
+            updateStats();
+            updateLikeButtonState();
+        }
+
     } catch (error) {
         console.error("Error toggling like:", error);
+        alert("Failed to update like status. Please check your connection and try again.");
     } finally {
         likeBtn.disabled = false;
     }
 }
 
-// Handle download and count
+// Handle download and count (once per person/device)
 async function handleDownload(e) {
     e.preventDefault();
     if (!currentVisitorId || !currentSongData) return;
 
     const songId = currentSongData.id;
     const downloadedSongs = JSON.parse(localStorage.getItem('downloadedSongs') || '{}');
+    const hasBeenCounted = downloadedSongs[songId]?.includes(currentVisitorId);
 
-    // Only count download once per user (across sessions)
-    if (!downloadedSongs[songId]?.includes(currentVisitorId)) {
+    // Only update count if it hasn't been counted for this device before
+    if (!hasBeenCounted) {
         try {
             const musicDocRef = doc(db, 'music', songId);
             await updateDoc(musicDocRef, { downloads: arrayUnion(currentVisitorId) });
@@ -155,15 +173,18 @@ async function handleDownload(e) {
             downloadedSongs[songId].push(currentVisitorId);
             localStorage.setItem('downloadedSongs', JSON.stringify(downloadedSongs));
             
-            // Optimistically update UI
-            currentSongData.downloads = [...(currentSongData.downloads || []), currentVisitorId];
-            updateStats();
+            // Re-fetch to update UI from server
+            const updatedDoc = await getDoc(musicDocRef);
+            if (updatedDoc.exists()) {
+                currentSongData.downloads = updatedDoc.data().downloads || [];
+                updateStats();
+            }
         } catch (error) {
             console.error("Error updating download count:", error);
         }
     }
     
-    // Trigger download
+    // Always trigger the actual download
     const link = document.createElement('a');
     link.href = currentSongData.audioUrl;
     link.download = `${currentSongData.artist} - ${currentSongData.title}.mp3`;
@@ -174,7 +195,6 @@ async function handleDownload(e) {
 
 // --- Initialization ---
 
-// Get music ID from query parameters
 const urlParams = new URLSearchParams(window.location.search);
 const songId = urlParams.get("id");
 
@@ -185,6 +205,7 @@ if (!songId) {
         if (user) {
             currentVisitorId = user.uid;
         } else {
+            // Create a stable guest ID if one doesn't exist
             if (!localStorage.getItem('guestId')) {
                 const randomId = 'guest_' + Math.random().toString(36).substring(2, 15);
                 localStorage.setItem('guestId', randomId);
@@ -203,18 +224,22 @@ async function loadMusicDetails(id) {
 
         if (docSnap.exists()) {
             const musicData = { id: docSnap.id, ...docSnap.data() };
+            // Ensure arrays exist for optimistic updates
+            if (!musicData.likes) musicData.likes = [];
+            if (!musicData.views) musicData.views = [];
+            if (!musicData.downloads) musicData.downloads = [];
+            
             updateUI(musicData);
 
-            // Attach event listeners after data is loaded
             audioPlayerEl.addEventListener('play', () => recordView(id));
             likeBtn.addEventListener('click', toggleLike);
             downloadBtn.addEventListener('click', handleDownload);
 
         } else {
-            document.body.innerHTML = "<h2>Music not found!</h2><a href='index.html'>Go Home</a>";
+            document.body.innerHTML = "<h2>Music not found!</h2><a href='index-1.html'>Go Home</a>";
         }
     } catch (error) {
         console.error("Error fetching music details:", error);
-        document.body.innerHTML = "<h2>Error loading music details.</h2><a href='index.html'>Go Home</a>";
+        document.body.innerHTML = "<h2>Error loading music details.</h2><a href='index-1.html'>Go Home</a>";
     }
 }
