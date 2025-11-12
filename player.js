@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
 import {
   getFirestore,
@@ -9,7 +10,8 @@ import {
   doc,
   updateDoc,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
+  getDoc
 } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
 
@@ -54,12 +56,9 @@ onAuthStateChanged(auth, (user) => {
 const backgroundEl = document.getElementById('player-background');
 const contentWrapper = document.getElementById('player-content-wrapper');
 
-// --- VIEW TRACKER ---
+// --- VIEW TRACKER (Once per session) ---
 async function recordView(songId) {
-  if (!currentVisitorId) {
-    setTimeout(() => recordView(songId), 500);
-    return;
-  }
+  if (!currentVisitorId) return;
 
   const viewedSongs = JSON.parse(sessionStorage.getItem('viewedSongs') || '[]');
   if (viewedSongs.includes(songId)) return;
@@ -69,7 +68,6 @@ async function recordView(songId) {
     await updateDoc(musicDocRef, { views: arrayUnion(currentVisitorId) });
     viewedSongs.push(songId);
     sessionStorage.setItem('viewedSongs', JSON.stringify(viewedSongs));
-    console.log(`✅ View recorded for ${songId}`);
   } catch (error) {
     console.error("Error recording view:", error);
   }
@@ -131,7 +129,7 @@ function updateUIForCurrentSong() {
   backgroundEl.style.backgroundImage = `url(${song.posterUrl})`;
   
   const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
-  const isLiked = likedSongs[song.id]?.includes(currentVisitorId);
+  const isLiked = likedSongs[song.id]?.includes(currentVisitorId) || song.likes?.includes(currentVisitorId);
   const likeBtn = document.getElementById('like-btn');
   if (likeBtn) {
       likeBtn.classList.toggle('active', isLiked);
@@ -232,7 +230,7 @@ function playNext() {
     else {
       isPlaying = false;
       audio.pause();
-      loadSong(0);
+      loadSong(0); // Go to first song but don't play
       return;
     }
   }
@@ -251,13 +249,12 @@ async function toggleLike() {
     const song = playlist[currentIndex];
     const songId = song.id;
     const musicDocRef = doc(db, 'music', songId);
-
-    const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
-    const isLiked = likedSongs[songId]?.includes(currentVisitorId);
-
     const likeBtn = document.getElementById('like-btn');
+    
+    const likedSongs = JSON.parse(localStorage.getItem('likedSongs') || '{}');
+    const isLiked = likedSongs[songId]?.includes(currentVisitorId) || song.likes?.includes(currentVisitorId);
+    
     likeBtn.disabled = true;
-
     try {
         if (isLiked) {
             await updateDoc(musicDocRef, { likes: arrayRemove(currentVisitorId) });
@@ -266,15 +263,20 @@ async function toggleLike() {
             }
         } else {
             await updateDoc(musicDocRef, { likes: arrayUnion(currentVisitorId) });
-            if (!likedSongs[songId]) {
-                likedSongs[songId] = [];
-            }
+            if (!likedSongs[songId]) likedSongs[songId] = [];
             likedSongs[songId].push(currentVisitorId);
         }
         localStorage.setItem('likedSongs', JSON.stringify(likedSongs));
-        updateUIForCurrentSong(); // Re-render button state
+        
+        // Re-fetch the song data to ensure our local state is accurate
+        const updatedSongSnap = await getDoc(musicDocRef);
+        if (updatedSongSnap.exists()) {
+          playlist[currentIndex].likes = updatedSongSnap.data().likes || [];
+        }
+        updateUIForCurrentSong();
     } catch (error) {
         console.error("Error toggling like:", error);
+        alert("Failed to update like status. Please check your connection and try again.");
     } finally {
         likeBtn.disabled = false;
     }
@@ -285,9 +287,10 @@ async function handleDownload() {
     
     const song = playlist[currentIndex];
     const songId = song.id;
-
     const downloadedSongs = JSON.parse(localStorage.getItem('downloadedSongs') || '{}');
-    if (!downloadedSongs[songId]?.includes(currentVisitorId)) {
+    const hasBeenCounted = downloadedSongs[songId]?.includes(currentVisitorId);
+
+    if (!hasBeenCounted) {
         try {
             const musicDocRef = doc(db, 'music', songId);
             await updateDoc(musicDocRef, { downloads: arrayUnion(currentVisitorId) });
@@ -333,12 +336,14 @@ function cycleRepeatMode() {
   if (repeatMode === 'none') {
     repeatMode = 'all';
     repeatBtn.innerHTML = "<i class='bx bx-repost'></i>";
+    repeatBtn.classList.add('active');
   } else if (repeatMode === 'all') {
     repeatMode = 'one';
     repeatBtn.innerHTML = "<i class='bx bx-repeat'></i><span class='repeat-one-indicator'>1</span>";
   } else {
     repeatMode = 'none';
     repeatBtn.innerHTML = "<i class='bx bx-repeat'></i>";
+    repeatBtn.classList.remove('active');
   }
 }
 
@@ -362,7 +367,7 @@ async function initializePlayer() {
       <div class="player-error">
         <h2>Playback Error</h2>
         <p>No song or playlist selected.</p>
-        <a href="index-1.html" class="back-link">Go to Discover</a>
+        <a href="index.html" class="back-link">Go to Discover</a>
       </div>`;
     return;
   }
@@ -373,7 +378,7 @@ async function initializePlayer() {
     const playlistIds = JSON.parse(playlistIdsStr);
     const fetchedSongs = [];
 
-    // 🔧 FIX: Split into chunks of 10 for Firestore 'in' query
+    // Firestore 'in' query is limited to 10 items, so we fetch in chunks.
     for (let i = 0; i < playlistIds.length; i += 10) {
       const chunk = playlistIds.slice(i, i + 10);
       const songsQuery = query(collection(db, 'music'), where(documentId(), 'in', chunk));
@@ -381,11 +386,12 @@ async function initializePlayer() {
       snapshot.docs.forEach(doc => fetchedSongs.push({ id: doc.id, ...doc.data() }));
     }
 
+    // Re-order the fetched songs to match the original playlist order.
     playlist = playlistIds.map(id => fetchedSongs.find(s => s.id === id)).filter(Boolean);
     originalPlaylist = [...playlist];
 
     const initialIndex = playlist.findIndex(s => s.id === songId);
-    if (initialIndex === -1) throw new Error("Selected song not found.");
+    if (initialIndex === -1) throw new Error("Selected song not found in playlist.");
 
     renderPlayerUI();
     isPlaying = true;
