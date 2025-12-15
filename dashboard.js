@@ -34,8 +34,8 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 // PayChangu Config - REPLACE WITH YOUR VALUES
-const PAYCHANGU_SECRET_KEY = 'SEC-O4cXo36nSiGf7zihVYvFsHOw6cuFapFp'; // From PayChangu dashboard (e.g., SEC-O4cXo36nSiGf7zihVYvFsHOw6cuFapFp)
-const PAYCHANGU_MOBILE_UUID = '20be6c20-adeb-4b5b-a7ba-0769820df4fb'; // Fallback Airtel UUID; update if TNM
+const PAYCHANGU_SECRET_KEY = 'SEC-O4cX'; // From PayChangu dashboard (e.g., SEC-O4cXo36nSiGf7zihVYvFsHOw6cuFapFp)
+const PAYCHANGU_MOBILE_UUID = '20'; // Fallback Airtel UUID; update if TNM
 const YOUR_MOBILE_NUMBER = '0981467345'; // Your 9-digit mobile linked to PayChangu (e.g., 0991234567)
 const FEE_PERCENTAGE = 0.03; // 3% fee estimate for mobile money
 
@@ -958,4 +958,5 @@ document.addEventListener('DOMContentLoaded', () => {
       loadWithdrawals();
     }
   }, 100);
+
 });
