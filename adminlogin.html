@@ -43,7 +43,7 @@ const firebaseConfig = {
         const user = userCredential.user;
 
         // ✅ Only allow known admin email
-        if (user.email === 'krisben079@gmail.com') {
+        if (user.email === 'krisben079@gmail.com','Faraikmhone@gmail.com') {
           window.location.href = "admin.html"; // Redirect to admin dashboard
         } else {
           errorBox.textContent = "You are not authorized as admin.";
