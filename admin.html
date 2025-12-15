@@ -59,7 +59,7 @@ const firebaseConfig = {
     const auth = getAuth(app);
 
     onAuthStateChanged(auth, (user) => {
-        if (user && user.email === 'krisben079@gmail.com') {
+        if (user && user.email === 'krisben079@gmail.com','faraikmhone@gmail.com') {
             document.getElementById('admin-email').textContent = user.email;
             loadUsers();
         } else {
