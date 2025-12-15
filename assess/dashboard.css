@@ -1,0 +1,177 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+  color: #fff;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.dashboard-wrapper {
+  width: 100%;
+  max-width: 960px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 20px;
+  padding: 30px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* Header */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #00bcd4;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+  font-size: 26px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+#logout-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+/* Upload */
+.upload-section h2 {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(255,255,255,0.08);
+  padding: 25px;
+  border-radius: 16px;
+}
+
+form label {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+form input {
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+}
+
+form button {
+  padding: 14px;
+  font-size: 18px;
+  background: linear-gradient(to right, #00c6ff, #0072ff);
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+form button:hover {
+  background: linear-gradient(to right, #0072ff, #0052cc);
+  transform: scale(1.02);
+}
+
+/* Music List */
+.uploaded-music h2 {
+  font-size: 22px;
+  margin-top: 40px;
+}
+
+.music-card {
+  background-color: rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.music-card img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.music-card-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.music-card-title {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.music-card-artist {
+  font-size: 16px;
+  color: #ccc;
+}
+
+.music-card-icons {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.music-card-icons a {
+  color: #fff;
+  font-size: 20px;
+  text-decoration: none;
+}
+
+.music-card-icons a:hover {
+  color: #00e5ff;
+}
+
+/* Footer */
+.dashboard-footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 14px;
+  color: #ccc;
+}
+
+.dashboard-footer i {
+  margin-right: 5px;
+  color: #00e5ff;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .dashboard-header h1 {
+    font-size: 20px;
+  }
+
+  form input, form button {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  .music-card img {
+    height: 180px;
+  }
+}

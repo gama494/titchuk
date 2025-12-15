@@ -1,0 +1,143 @@
+/* General Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to right, #0f2027, #203a43, #2c5364); /* Beautiful 4K background */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  color: #333;
+}
+
+/* Form Container */
+form {
+  background-color: #ffffff;
+  padding: 60px;
+  border-radius: 24px;
+  max-width: 650px;
+  width: 100%;
+  box-shadow: 0 12px 60px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* Heading */
+h1 {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 60px;
+  color: #222;
+}
+
+/* Label */
+label {
+  font-weight: 600;
+  margin: 30px 0 10px;
+  display: block;
+  font-size: 28px;
+  color: #444;
+}
+
+/* Input Fields */
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 24px;
+  font-size: 24px;
+  border: 2px solid #ccc;
+  border-radius: 14px;
+  margin-bottom: 30px;
+  transition: border-color 0.3s;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Buttons */
+button {
+  width: 100%;
+  padding: 22px;
+  border: none;
+  border-radius: 14px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+button[type="submit"] {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: #fff;
+}
+
+button[type="submit"]:hover {
+  background: linear-gradient(135deg, #0056b3, #003d80);
+}
+
+/* Forgot Password Button */
+#forgot-password {
+  background: transparent;
+  color: #007bff;
+  margin-top: 25px;
+  font-size: 26px;
+  text-align: center;
+}
+
+#forgot-password:hover {
+  text-decoration: underline;
+}
+
+/* Responsive: Tablets & Mobiles */
+@media (max-width: 768px) {
+  body {
+    padding: 20px;
+  }
+
+  form {
+    padding: 40px;
+  }
+
+  h1 {
+    font-size: 42px;
+  }
+
+  label {
+    font-size: 22px;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    font-size: 20px;
+    padding: 18px;
+  }
+
+  button {
+    font-size: 22px;
+    padding: 18px;
+  }
+
+  #forgot-password {
+    font-size: 20px;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

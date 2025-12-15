@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TITCHUKE | Dashboard</title>
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+
+  <!-- Header -->
+  <header class="dashboard-header">
+    <h1><i class='bx bx-music'></i> TITCHUKE Dashboard</h1>
+    <button id="logout-button" title="Logout"><i class='bx bx-log-out-circle'></i></button>
+  </header>
+
+  <!-- Upload Form -->
+  <section class="upload-section">
+    <h2><i class='bx bx-upload'></i> Upload Your Music</h2>
+    <form id="music-upload-form">
+      <label for="title">Title</label>
+      <input type="text" id="title" placeholder="Enter song title" required>
+
+      <label for="artist">Artist</label>
+      <input type="text" id="artist" placeholder="Artist name" required>
+
+      <label for="genres">Genres (comma separated)</label>
+      <input type="text" id="genres" placeholder="e.g. Afrobeat, Gospel">
+
+      <label for="poster">Poster</label>
+      <input type="file" id="poster" accept="image/*" required>
+
+      <label for="audio">Audio</label>
+      <input type="file" id="audio" accept="audio/*" required>
+
+      <button type="submit"><i class='bx bx-cloud-upload'></i> Upload</button>
+    </form>
+  </section>
+
+  <!-- Uploaded Music List -->
+  <section class="uploaded-music">
+    <h2>Your Uploaded Songs</h2>
+    <div id="music-list-container"></div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="dashboard-footer">
+    <p>&copy; 2025 TITCHUKE | Designed by <strong>Kris Tech</strong></p>
+    <p><i class='bx bxs-map'></i> Lilongwe, Area 18B – Sent Market</p>
+  </footer>
+
+</div>
+
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>

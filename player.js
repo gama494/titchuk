@@ -15,16 +15,15 @@ import {
 } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
 
-// --- FIREBASE CONFIG ---
 const firebaseConfig = {
-  apiKey: "AIzaSyDkANMB95-hIl4-I2gla5qtsH3BlH77nU8",
-  authDomain: "music-upload-30cc3.firebaseapp.com",
-  projectId: "music-upload-30cc3",
-  storageBucket: "music-upload-30cc3.firebasestorage.app",
-  messagingSenderId: "385597338493",
-  appId: "1:385597338493:web:04696d4dc201e8427e1214"
+  apiKey: "AIzaSyA6S3m7vXt78iaS3r6Z0XAVHcVCm9mroC0",
+  authDomain: "titchuke-7fecd.firebaseapp.com",
+  projectId: "titchuke-7fecd",
+  storageBucket: "titchuke-7fecd.firebasestorage.app",
+  messagingSenderId: "538951879592",
+  appId: "1:538951879592:web:3047441e4e4b54e2922b9d",
+  measurementId: "G-D46Q0962RQ"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);

@@ -1,43 +1,75 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Downloading...</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Downloading Music - Titchuke</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.jpg" type="image/png" />
 </head>
-<body class="light-theme download-page-body">
+<body class="download-page-body">
+    <div class="download-container">
+        <div class="poster-wrapper">
+            <img id="poster" src="logo.jpg" alt="Music Poster">
+        </div>
+        <div class="info-wrapper">
+            <p class="status-text">Your download will begin shortly...</p>
+            <h1 id="title">Loading music...</h1>
+            <h2 id="artist"></h2>
+            <div id="status-indicator">
+                <div class="loader"></div>
+                <span>Preparing your file...</span>
+            </div>
+            <p class="manual-download">If your download doesn't start, <a id="downloadLink" href="#">click here</a>.</p>
+        </div>
+    </div>
 
-  <div class="download-card">
-    <img id="poster" src="" alt="Music Poster">
-    <h2 id="title">Downloading...</h2>
-    <a id="downloadLink" class="download-link" href="#" download>Download Now</a>
-  </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const title = params.get("title");
+            const artist = params.get("artist");
+            const poster = params.get("poster");
+            const audio = params.get("audio");
 
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const title = params.get("title");
-    const artist = params.get("artist");
-    const poster = params.get("poster");
-    const audio = params.get("audio");
+            const titleEl = document.getElementById("title");
+            const artistEl = document.getElementById("artist");
+            const posterEl = document.getElementById("poster");
+            const linkEl = document.getElementById("downloadLink");
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.querySelector('.status-text');
 
-    if (title && poster && audio) {
-      document.getElementById("title").textContent = `Now Downloading: ${title}`;
-      document.getElementById("poster").src = decodeURIComponent(poster);
+            if (title && poster && audio) {
+                const decodedTitle = decodeURIComponent(title);
+                const decodedArtist = decodeURIComponent(artist);
+                
+                document.title = `Downloading: ${decodedTitle} - Titchuke`;
+                titleEl.textContent = decodedTitle;
+                artistEl.textContent = `by ${decodedArtist}`;
+                posterEl.src = decodeURIComponent(poster);
+                linkEl.href = decodeURIComponent(audio);
 
-      const link = document.getElementById("downloadLink");
-      link.href = decodeURIComponent(audio);
-      
-      const filename = artist ? `${decodeURIComponent(artist)} - ${decodeURIComponent(title)}.mp3` : `${decodeURIComponent(title)}.mp3`;
-      link.setAttribute("download", filename);
+                // This is the crucial part: constructing a clean filename.
+                const filename = decodedArtist ? `${decodedArtist} - ${decodedTitle}.mp3` : `${decodedTitle}.mp3`;
+                linkEl.setAttribute("download", filename);
 
-      // Optional: Auto start download after delay
-      setTimeout(() => {
-        link.click();
-      }, 1000);
-    } else {
-      document.body.innerHTML = "<p>Invalid download link</p>";
-    }
-  </script>
+                // Give the page a moment to render, then trigger the download.
+                setTimeout(() => {
+                    linkEl.click();
+                    statusIndicator.innerHTML = "<i class='bx bxs-check-circle'></i> <span>Download started!</span>";
+                    statusText.textContent = "Thank you for using Titchuke Music!";
+                }, 1500); // 1.5 second delay for UX
 
+            } else {
+                titleEl.textContent = 'Download Error';
+                artistEl.textContent = '';
+                statusIndicator.innerHTML = "<i class='bx bxs-error-circle'></i><span>Invalid or incomplete download link.</span>";
+                statusText.textContent = "Please go back and try again.";
+                document.querySelector('.manual-download').innerHTML = "<a href='index-1.html'>Go to Home</a>";
+            }
+        });
+    </script>
 </body>
 </html>

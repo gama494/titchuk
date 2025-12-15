@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live - Titchuke Music</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="live.css">
+    <link rel="icon" href="logo.jpg" type="image/png" />
+</head>
+<body class="live-body">
+    
+    <div class="container">
+        <!-- Reusing sidebar from main layout -->
+        <aside class="sidebar">
+            <div>
+                <div class="logo">
+                  <button class="menu-btn" id="menu-close"><i class='bx bx-log-out-circle'></i></button>
+                  <i class='bx bx-pulse'></i>
+                  <a href="index-1.html">Titchuke</a>
+                </div>
+                <div class="menu">
+                  <h5>Menu</h5>
+                  <ul>
+                    <li><i class='bx bxs-home'></i><a href="index.html">Home</a></li>
+                    <li class="active"><i class='bx bxs-camera-movie'></i><a href="live.html">Live</a></li>
+                    <li><i class='bx bxs-bolt-circle'></i><a href="exprole.html">Explore</a></li>
+                    <li><i class='bx bxs-volume-full'></i><a href="genres.html">Genres</a></li>
+                    <li><i class='bx bxs-album'></i><a href="albums.html">Albums</a></li>
+                  </ul>
+                </div>
+            </div>
+        </aside>
+
+        <main style="background: transparent; padding: 0; width: 100%;">
+            <div class="live-lobby-container">
+                <header class="live-header">
+                    <div class="header-left">
+                        <h1><span class="live-badge">LIVE</span> Now</h1>
+                    </div>
+                    <div class="header-actions">
+                         <a href="index.html" class="home-action-btn"><i class='bx bxs-home'></i> Home</a>
+                        <button id="open-create-modal-btn" class="go-live-btn">
+                            <i class='bx bx-broadcast'></i> Go Live
+                        </button>
+                    </div>
+                </header>
+
+                <div class="section-title"><i class='bx bxs-video-recording'></i> Active Streams</div>
+                <div id="active-streams" class="stream-grid">
+                    <!-- Active streams injected via JS -->
+                    <p style="color: #666;">Loading streams...</p>
+                </div>
+
+                <div class="section-title"><i class='bx bx-history'></i> Past Broadcasts</div>
+                <div id="past-streams" class="stream-grid">
+                    <!-- Past streams injected via JS -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Create Live Modal -->
+    <div id="create-live-modal" class="live-modal-overlay" style="display: none;">
+        <div class="live-modal">
+            <div class="modal-header">
+                <h2>Start Broadcast</h2>
+                <button id="close-modal-btn"><i class='bx bx-x'></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Live Title</label>
+                    <input type="text" id="live-title-input" placeholder="e.g. Chillin' with Music" maxlength="40">
+                </div>
+                <div class="form-group">
+                    <label>Cover Image</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="live-cover-input" accept="image/*">
+                        <div class="upload-placeholder">
+                            <i class='bx bx-image-add'></i>
+                            <span>Tap to upload cover</span>
+                        </div>
+                        <img id="cover-preview" src="" style="display:none;">
+                    </div>
+                </div>
+                <button id="confirm-go-live-btn" class="start-stream-btn">Start Live</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="live.js"></script>
+    <script>
+        // Sidebar toggle logic for mobile
+        document.addEventListener('DOMContentLoaded', () => {
+          const menuOpen = document.getElementById("menu-open"); 
+          const menuClose = document.getElementById("menu-close");
+          const sidebar = document.querySelector(".sidebar");
+          if (menuClose && sidebar) {
+            menuClose.addEventListener("click", () => sidebar.classList.remove("open"));
+          }
+        });
+    </script>
+</body>
+</html>

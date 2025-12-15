@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+
+  <h2 id="earnings">Total Earnings: 0 MK</h2>
+  
+  <table id="users-table">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Gender</th>
+        <th>Age</th>
+        <th>Phone</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Users will be loaded here dynamically -->
+    </tbody>
+  </table>
+
+  <!-- Withdraw Section -->
+  <h3>Withdraw Earnings</h3>
+  <input type="text" id="paypal-email" placeholder="Enter PayPal Email">
+  <button onclick="withdrawMoney()">Withdraw</button>
+
+  <script src="admin.js" type="module"></script>
+</body>
+</html>

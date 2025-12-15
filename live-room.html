@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live Room - Titchuke</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="live.css">
+    <link rel="icon" href="logo.jpg" type="image/png" />
+    <link rel="shortcut icon" href="logo.jpg" type="image/png" />
+    <!-- PeerJS for WebRTC -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body class="live-body">
+
+    <div class="room-container">
+        <!-- Header -->
+        <div class="room-header">
+            <div class="room-stats">
+                <a href="live.html" class="room-home-btn"><i class='bx bxs-home'></i></a>
+                <div class="stat-item"><i class='bx bxs-show'></i> <span id="viewer-count">0</span></div>
+                <div class="stat-item"><i class='bx bxs-heart' style="color: #F43F5E;"></i> <span id="like-count">0</span></div>
+            </div>
+            <button class="close-btn" onclick="window.location.href='live.html'"><i class='bx bx-x'></i></button>
+        </div>
+
+        <!-- Video Stage -->
+        <div id="video-stage" class="video-stage">
+            <!-- Host Slot -->
+            <div class="video-slot" id="host-slot">
+                <div class="video-placeholder">
+                    <div class="avatar-pulse">
+                        <i class='bx bx-user-circle'></i>
+                    </div>
+                    <p>Host</p>
+                </div>
+                <video id="host-video" autoplay playsinline muted></video>
+                <div class="host-label"><i class='bx bxs-star'></i> Host</div>
+            </div>
+            
+            <!-- Guest Slot (Hidden by default until joined) -->
+            <div class="video-slot" id="guest-slot" style="display: none;">
+                <div class="video-placeholder">
+                    <div class="avatar-pulse">
+                         <i class='bx bx-user'></i>
+                    </div>
+                    <p>Guest</p>
+                </div>
+                <video id="guest-video" autoplay playsinline></video>
+                <div class="guest-label">Guest</div>
+            </div>
+        </div>
+
+        <!-- Floating Hearts Animation Layer -->
+        <div id="hearts-container" class="hearts-container"></div>
+
+        <!-- UI Overlay -->
+        <div class="room-overlay">
+            
+            <!-- Requests Panel (Hidden by default) -->
+            <div id="requests-panel" class="requests-panel" style="display: none;">
+                <div style="padding: 5px; text-align: center; color: #94a3b8;">No pending requests.</div>
+            </div>
+
+            <div id="chat-container" class="chat-container">
+                <!-- Messages go here -->
+            </div>
+
+            <!-- Main Controls -->
+            <div class="controls-bar">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Say something..." maxlength="100">
+                
+                <button id="send-btn" class="icon-btn" title="Send"><i class='bx bx-send'></i></button>
+                <button id="like-btn" class="icon-btn like-fab" title="Like"><i class='bx bxs-heart'></i></button>
+                
+                <!-- Host Specific: Requests Button -->
+                <button id="requests-btn" class="icon-btn" style="display: none; position: relative;" title="Join Requests">
+                    <i class='bx bx-user-voice'></i>
+                    <span id="req-badge" class="badge">0</span>
+                </button>
+
+                <!-- Media Controls (Only for Host/Guest) -->
+                <div id="media-controls" class="media-controls-group" style="display:none;">
+                    <button id="toggle-mic-btn" class="icon-btn control-toggle" title="Mute Mic"><i class='bx bx-microphone'></i></button>
+                    <button id="toggle-cam-btn" class="icon-btn control-toggle" title="Video Off"><i class='bx bx-video'></i></button>
+                    <button id="switch-cam-btn" class="icon-btn control-toggle" title="Switch Camera"><i class='bx bx-camera-change'></i></button>
+                </div>
+
+                <!-- Action Buttons -->
+                <button id="request-join-btn" class="request-btn" style="display: none;"><i class='bx bx-video-plus'></i> Request to Join</button>
+                <button id="leave-btn" class="leave-btn" style="display:none;">Leave</button>
+                <button id="end-stream-btn" class="end-stream-btn" style="display:none;">End Live</button>
+                <button id="delete-live-btn" class="delete-live-btn-room" style="display:none;" title="Delete Live"><i class='bx bxs-trash'></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="live-room.js"></script>
+</body>
+</html>
